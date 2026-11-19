@@ -31,7 +31,6 @@
     <label>Wishlist app address
       <input id="app" type="url" placeholder="https://yourname.github.io/wishlist/">
     </label>
-    <label class="check"><input id="test" type="checkbox"> Test mode: show what was grabbed on the shop page instead of opening the app</label>
   </section>
 
   <section class="card" aria-label="Install">
@@ -43,7 +42,7 @@
     <p class="muted" id="note"></p>
     <ol start="3">
       <li>Open a product page (try an Argos one) and click <strong>+ Wishlist</strong> in the bar.</li>
-      <li>If you change the settings above, drag the button again and delete the old one.</li>
+      <li>Already have a + Wishlist button? Delete the old one and drag this one in its place.</li>
     </ol>
   </section>
 </main>
@@ -125,8 +124,6 @@ function wishlistGrab(cfg) {
   var data = { url: u.href, store: host, title: out.title.slice(0, 300), image: out.image, price: out.price == null ? '' : String(out.price) };
   var target = cfg.app ? cfg.app.replace(/#.*$/, '') + '#add?' + new URLSearchParams(data).toString() : '';
 
-  if (!cfg.test && target) { window.open(target, '_blank'); return; }
-
   var old = d.getElementById('__wishlist_panel'); if (old) old.remove();
   var box = d.createElement('div');
   box.id = '__wishlist_panel';
@@ -140,7 +137,7 @@ function wishlistGrab(cfg) {
     p.appendChild(b); p.appendChild(d.createTextNode(value || 'not found'));
     box.appendChild(p);
   };
-  var h = d.createElement('div'); h.textContent = 'Wishlist grab' + (cfg.test ? ' (test mode)' : ''); h.style.cssText = 'all:initial;font:700 16px system-ui,sans-serif;color:#1B2420';
+  var h = d.createElement('div'); h.textContent = target ? 'Add to wishlist' : 'Wishlist grab (no app address set)'; h.style.cssText = 'all:initial;font:700 16px system-ui,sans-serif;color:#1B2420';
   box.appendChild(h);
   if (out.image) {
     var img = d.createElement('img'); img.src = out.image; img.alt = '';
@@ -157,31 +154,31 @@ function wishlistGrab(cfg) {
     b.style.cssText = 'all:initial;cursor:pointer;font:600 14px system-ui,sans-serif;padding:10px 16px;border-radius:10px;background:' + bg + ';color:' + fg;
     b.onclick = fn; btns.appendChild(b);
   };
-  if (target) mk('Open in wishlist', '#B8324A', '#fff', function () { window.open(target, '_blank'); box.remove(); });
   mk('Close', '#EEF1EC', '#1B2420', function () { box.remove(); });
+  if (target) {
+    var go = d.createElement('a'); go.href = target; go.target = '_blank'; go.rel = 'noopener'; go.textContent = 'Save to wishlist';
+    go.style.cssText = 'all:initial;cursor:pointer;font:600 14px system-ui,sans-serif;padding:10px 16px;border-radius:10px;background:#B8324A;color:#fff';
+    go.onclick = function () { setTimeout(function () { box.remove(); }, 300); };
+    btns.appendChild(go);
+  }
   box.appendChild(btns);
   d.body.appendChild(box);
 }
 
 const $ = (id) => document.getElementById(id);
 const hosted = /^https?:$/.test(location.protocol) ? new URL('./', location.href).href : '';
-try {
-  $('app').value = localStorage.getItem('wl_app') || hosted;
-  const t = localStorage.getItem('wl_test');
-  $('test').checked = t !== null ? t === '1' : !hosted;
-} catch { $('app').value = hosted; $('test').checked = !hosted; }
+try { $('app').value = localStorage.getItem('wl_app') || hosted; } catch { $('app').value = hosted; }
 
 function build() {
-  const cfg = { app: $('app').value.trim(), test: $('test').checked };
-  try { localStorage.setItem('wl_app', cfg.app); localStorage.setItem('wl_test', cfg.test ? '1' : '0'); } catch {}
+  const cfg = { app: $('app').value.trim() };
+  try { localStorage.setItem('wl_app', cfg.app); } catch {}
   const code = '(' + wishlistGrab.toString().replace(/\n\s*/g, ' ') + ')(' + JSON.stringify(cfg) + ')';
   $('bm').href = 'javascript:' + encodeURIComponent(code);
-  $('note').textContent = cfg.test || !cfg.app
-    ? 'Current button: test mode. It shows the grabbed details on the shop page.'
-    : 'Current button: opens ' + cfg.app + ' with the item ready to save.';
+  $('note').textContent = cfg.app
+    ? 'This button shows what it found, then "Save to wishlist" opens ' + cfg.app + ' with the item filled in.'
+    : 'Add the wishlist address above first.';
 }
 $('app').addEventListener('input', build);
-$('test').addEventListener('change', build);
 $('bm').addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar instead of clicking it.'); });
 build();
 </script>

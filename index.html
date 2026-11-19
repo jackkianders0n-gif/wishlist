@@ -79,7 +79,9 @@
   .sec h2 span { font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; margin-bottom: 14px; }
 
-  .card { text-align: left; padding: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(27,36,32,.06); }
+  .card { text-align: left; padding: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; width: 100%; box-shadow: 0 1px 2px rgba(27,36,32,.06); }
+  /* Safari doesn't stretch the insides of a <button>: size them explicitly. */
+  .card > .pic, .card > .card-body { width: 100%; box-sizing: border-box; }
   .card[aria-pressed="true"] { border-color: var(--accent); }
   .card.bought { opacity: .62; }
   /* Photos: fixed pixel maximums (no % heights, no absolute positioning) so Safari sizes them correctly. */
