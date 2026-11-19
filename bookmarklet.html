@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wishlist bookmarklet</title>
+<style>
+  :root { --ink:#1B2420; --muted:#5B6660; --line:#E2E5DF; --pine:#1F5A43; --red:#B8324A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, Segoe UI, sans-serif; color: var(--ink); background: #F4F5F1; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; display: flex; flex-direction: column; gap: 20px; }
+  h1 { margin: 0; font-size: 28px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  input[type=url] { font: inherit; font-size: 15px; color: var(--ink); border: 1px solid #C9CFC8; border-radius: 10px; padding: 10px 12px; }
+  .check { flex-direction: row; align-items: center; gap: 10px; color: var(--ink); font-weight: 500; font-size: 15px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--pine); }
+  .drag { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 12px; background: var(--red); color: #fff; font-weight: 700; font-size: 16px; text-decoration: none; cursor: grab; }
+  ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .muted { color: var(--muted); font-size: 13px; margin: 0; }
+  code { font-size: 13px; background: #EEF1EC; padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Wishlist bookmarklet</h1>
+  <p class="muted"><a href="./">← Back to the wishlist</a></p>
+  <p class="muted">A button for your bookmarks bar. On any product page, click it to grab the picture, name and price, even on shops like Argos that block the server.</p>
+
+  <section class="card" aria-label="Settings">
+    <label>Wishlist app address
+      <input id="app" type="url" placeholder="https://yourname.github.io/wishlist/">
+    </label>
+    <label class="check"><input id="test" type="checkbox"> Test mode: show what was grabbed on the shop page instead of opening the app</label>
+  </section>
+
+  <section class="card" aria-label="Install">
+    <ol>
+      <li>Show your bookmarks bar: <code>⌘ Shift B</code> on Mac, <code>Ctrl Shift B</code> on Windows (Safari: View › Show Favourites Bar).</li>
+      <li>Drag this red button onto the bar:</li>
+    </ol>
+    <a id="bm" class="drag" href="#">+ Wishlist</a>
+    <p class="muted" id="note"></p>
+    <ol start="3">
+      <li>Open a product page (try an Argos one) and click <strong>+ Wishlist</strong> in the bar.</li>
+      <li>If you change the settings above, drag the button again and delete the old one.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+/* Runs on the shop's page. Must be self-contained: it is turned into a javascript: URL. */
+function wishlistGrab(cfg) {
+  var d = document;
+  var q = function (s) { try { return d.querySelector(s); } catch (e) { return null; } };
+  var txt = function (el) { return el ? el.textContent.replace(/\s+/g, ' ').trim() : ''; };
+  var meta = function (k) {
+    var m = q('meta[property="' + k + '"],meta[name="' + k + '"],meta[itemprop="' + k + '"]');
+    return (m && m.getAttribute('content')) || '';
+  };
+  var parsePrice = function (s) {
+    var m = String(s || '').replace(/,/g, '').match(/(\d+(?:\.\d{1,2})?)/);
+    return m ? parseFloat(m[1]) : null;
+  };
+  var out = { title: '', image: '', price: null };
+
+  var stack = [];
+  d.querySelectorAll('script[type="application/ld+json"]').forEach(function (s) {
+    try { stack.push(JSON.parse(s.textContent)); } catch (e) {}
+  });
+  while (stack.length) {
+    var n = stack.shift();
+    if (Array.isArray(n)) { stack.push.apply(stack, n); continue; }
+    if (!n || typeof n !== 'object') continue;
+    if (n['@graph']) stack.push(n['@graph']);
+    var ty = n['@type'];
+    if (ty === 'Product' || (Array.isArray(ty) && ty.indexOf('Product') > -1)) {
+      out.title = n.name || '';
+      var im = n.image; if (Array.isArray(im)) im = im[0]; if (im && typeof im === 'object') im = im.url;
+      out.image = im || '';
+      var of = n.offers; if (Array.isArray(of)) of = of[0];
+      if (of) {
+        var sp = of.priceSpecification; if (Array.isArray(sp)) sp = sp[0];
+        var p = of.price != null ? of.price : of.lowPrice != null ? of.lowPrice : sp && sp.price;
+        if (p != null) out.price = parsePrice(p);
+      }
+      break;
+    }
+  }
+
+  if (/(^|\.)amazon\./.test(location.hostname)) {
+    out.title = txt(q('#productTitle')) || out.title;
+    var li = q('#landingImage');
+    if (li) out.image = li.getAttribute('data-old-hires') || li.src || out.image;
+    var ap = q('#corePrice_feature_div .a-offscreen, #corePriceDisplay_desktop_feature_div .a-offscreen, #apex_desktop .a-offscreen');
+    if (ap) out.price = parsePrice(txt(ap));
+  }
+
+  out.title = out.title || meta('og:title') || txt(q('h1')) || d.title;
+  out.image = out.image || meta('og:image') || meta('twitter:image');
+  if (out.price == null) {
+    var mp = meta('product:price:amount') || meta('og:price:amount') || meta('price');
+    if (mp) out.price = parsePrice(mp);
+  }
+  if (out.price == null) {
+    var pe = q('[itemprop="price"]') || q('[data-test*="price" i]') || q('[data-testid*="price" i]') || q('[class*="price" i]');
+    if (pe) out.price = parsePrice(pe.getAttribute('content') || txt(pe));
+  }
+  if (out.image) { try { out.image = new URL(out.image, location.href).href; } catch (e) {} }
+
+  var canon = q('link[rel="canonical"]');
+  var u;
+  try { u = new URL(canon && canon.href && new URL(canon.href).hostname === location.hostname ? canon.href : location.href); }
+  catch (e) { u = new URL(location.href); }
+  u.hash = '';
+  var host = u.hostname.replace(/^www\./, '');
+  var am = /^amazon\./.test(host) && u.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/i);
+  var ar = host === 'argos.co.uk' && u.pathname.match(/\/product\/(\d+)/);
+  if (am) u = new URL('https://' + u.hostname + '/dp/' + am[1].toUpperCase());
+  else if (ar) u = new URL('https://www.argos.co.uk/product/' + ar[1]);
+  else Array.from(u.searchParams.keys()).forEach(function (k) {
+    if (/^(utm_.*|gclid|gclsrc|gbraid|wbraid|gad_.*|fbclid|msclkid|mcid|cmpid|tag|ref|srsltid)$/i.test(k)) u.searchParams.delete(k);
+  });
+
+  var data = { url: u.href, store: host, title: out.title.slice(0, 300), image: out.image, price: out.price == null ? '' : String(out.price) };
+  var target = cfg.app ? cfg.app.replace(/#.*$/, '') + '#add?' + new URLSearchParams(data).toString() : '';
+
+  if (!cfg.test && target) { window.open(target, '_blank'); return; }
+
+  var old = d.getElementById('__wishlist_panel'); if (old) old.remove();
+  var box = d.createElement('div');
+  box.id = '__wishlist_panel';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'Wishlist preview');
+  box.style.cssText = 'all:initial;position:fixed;top:16px;right:16px;z-index:2147483647;width:340px;background:#fff;color:#1B2420;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:18px;font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;display:flex;flex-direction:column;gap:10px';
+  var row = function (label, value, bad) {
+    var p = d.createElement('div');
+    p.style.cssText = 'all:initial;display:block;font:14px/1.45 system-ui,sans-serif;color:' + (bad ? '#B8324A' : '#1B2420');
+    var b = d.createElement('strong'); b.textContent = label + ': '; b.style.cssText = 'font-weight:700';
+    p.appendChild(b); p.appendChild(d.createTextNode(value || 'not found'));
+    box.appendChild(p);
+  };
+  var h = d.createElement('div'); h.textContent = 'Wishlist grab' + (cfg.test ? ' (test mode)' : ''); h.style.cssText = 'all:initial;font:700 16px system-ui,sans-serif;color:#1B2420';
+  box.appendChild(h);
+  if (out.image) {
+    var img = d.createElement('img'); img.src = out.image; img.alt = '';
+    img.style.cssText = 'all:initial;display:block;width:100%;height:180px;object-fit:contain;background:#F4F5F1;border-radius:10px';
+    box.appendChild(img);
+  }
+  row('Name', data.title, !data.title);
+  row('Price', data.price ? '£' + Number(data.price).toFixed(2) : '', !data.price);
+  row('Picture', out.image ? 'found' : '', !out.image);
+  row('Link', data.url);
+  var btns = d.createElement('div'); btns.style.cssText = 'all:initial;display:flex;gap:8px;justify-content:flex-end';
+  var mk = function (label, bg, fg, fn) {
+    var b = d.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.style.cssText = 'all:initial;cursor:pointer;font:600 14px system-ui,sans-serif;padding:10px 16px;border-radius:10px;background:' + bg + ';color:' + fg;
+    b.onclick = fn; btns.appendChild(b);
+  };
+  if (target) mk('Open in wishlist', '#B8324A', '#fff', function () { window.open(target, '_blank'); box.remove(); });
+  mk('Close', '#EEF1EC', '#1B2420', function () { box.remove(); });
+  box.appendChild(btns);
+  d.body.appendChild(box);
+}
+
+const $ = (id) => document.getElementById(id);
+const hosted = /^https?:$/.test(location.protocol) ? new URL('./', location.href).href : '';
+try {
+  $('app').value = localStorage.getItem('wl_app') || hosted;
+  const t = localStorage.getItem('wl_test');
+  $('test').checked = t !== null ? t === '1' : !hosted;
+} catch { $('app').value = hosted; $('test').checked = !hosted; }
+
+function build() {
+  const cfg = { app: $('app').value.trim(), test: $('test').checked };
+  try { localStorage.setItem('wl_app', cfg.app); localStorage.setItem('wl_test', cfg.test ? '1' : '0'); } catch {}
+  const code = '(' + wishlistGrab.toString().replace(/\n\s*/g, ' ') + ')(' + JSON.stringify(cfg) + ')';
+  $('bm').href = 'javascript:' + encodeURIComponent(code);
+  $('note').textContent = cfg.test || !cfg.app
+    ? 'Current button: test mode. It shows the grabbed details on the shop page.'
+    : 'Current button: opens ' + cfg.app + ' with the item ready to save.';
+}
+$('app').addEventListener('input', build);
+$('test').addEventListener('change', build);
+$('bm').addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar instead of clicking it.'); });
+build();
+</script>
+</body>
+</html>

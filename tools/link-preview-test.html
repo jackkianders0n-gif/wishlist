@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link preview test</title>
+<style>
+  :root { --ink:#1B2420; --muted:#5B6660; --line:#E2E5DF; --pine:#1F5A43; --red:#B8324A; --amber:#9A5B00; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 Inter, system-ui, -apple-system, Segoe UI, sans-serif; color: var(--ink); background: #F4F5F1; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; gap: 20px; }
+  h1 { margin: 0; font-size: 26px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  input, textarea { font: inherit; font-size: 14px; color: var(--ink); border: 1px solid #C9CFC8; border-radius: 10px; padding: 10px 12px; background: #fff; }
+  textarea { min-height: 200px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 12px 20px; background: var(--pine); color: #fff; cursor: pointer; min-height: 44px; }
+  button:disabled { opacity: .6; cursor: progress; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #summary { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; vertical-align: top; padding: 12px 10px; border-top: 1px solid var(--line); font-size: 14px; }
+  th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-top: 0; }
+  .thumb { width: 88px; height: 88px; border-radius: 10px; background: #EEF1EC; object-fit: contain; display: block; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .ok { background: #E4EFE8; color: var(--pine); }
+  .part { background: #FBEFD9; color: var(--amber); }
+  .bad { background: #F8E3E7; color: var(--red); }
+  .muted { color: var(--muted); font-size: 12px; }
+  .wrap { overflow-x: auto; }
+  a { color: var(--pine); word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Link preview test</h1>
+  <p class="muted" style="margin:0">Calls your <code>link-preview</code> Edge Function for each link and shows what came back. Settings are saved in this browser only.</p>
+
+  <section class="card grid" aria-label="Settings">
+    <label>Supabase project URL
+      <input id="sbUrl" placeholder="https://abcdefgh.supabase.co">
+    </label>
+    <label>Anon / publishable key
+      <input id="sbKey" placeholder="eyJ… or sb_publishable_…">
+    </label>
+    <label>Function name
+      <input id="fnName" value="link-preview">
+    </label>
+  </section>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:12px" aria-label="Links">
+    <label for="links">Links to test (one per line)</label>
+    <textarea id="links">https://www.argos.co.uk/product/9214419?utm_custom6=LIA&utm_source=google&utm_medium=free_listing&utm_campaign=merchant_center&deeplink=true
+https://www.amazon.co.uk/Ninja-PrecisionPro-Processor-Presets-Settings/dp/B0GLQX3L6F/ref=asc_df_B0GLQX3L6F?mcid=ed8dc305ba553200a8da55a8d8e08b32&th=1&psc=1&tag=googshopuk-21&linkCode=df0
+https://www.procook.co.uk/product/non-stick-baking-tray-granite-41-x-31cm
+https://www.sharkninja.co.uk/ninja-extended-life-ceramic-3-piece-saucepan-set-cw93003eui/CW93003EUI.html
+https://www.amazon.co.uk/gp/product/B09434RPTF/ref=ewc_pr_img_5?smid=A3P5ROKL5A1OLE&th=1
+https://www.amazon.co.uk/gp/product/B0942M5B2Y/ref=ewc_pr_img_6?smid=A3P5ROKL5A1OLE&th=1
+https://www.amazon.co.uk/gp/product/B000KILLXM/ref=ewc_pr_img_1?smid=A3P5ROKL5A1OLE&psc=1
+https://www.amazon.co.uk/gp/product/B00004OCIU/ref=ewc_pr_img_2?smid=A3P5ROKL5A1OLE&th=1
+https://www.argos.co.uk/product/9345168?utm_custom6=LIA&deeplink=true&gclsrc=aw.ds&cmpid=GS001&gad_source=1</textarea>
+    <div class="row">
+      <button id="run" type="button">Test all</button>
+      <label style="flex-direction:row;align-items:center;font-weight:500;color:var(--ink)">
+        <input id="oneByOne" type="checkbox" style="width:18px;height:18px"> One at a time (slower, but shows if batching triggers blocks)
+      </label>
+      <span id="summary" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card wrap" aria-label="Results">
+    <table>
+      <thead><tr><th>Picture</th><th>Result</th><th>Title</th><th>Price</th><th>Details</th></tr></thead>
+      <tbody id="out"><tr><td colspan="5" class="muted">Results appear here.</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+for (const id of ["sbUrl", "sbKey", "fnName"]) {
+  try { const v = localStorage.getItem("lp_" + id); if (v) $(id).value = v; } catch {}
+  $(id).addEventListener("change", () => { try { localStorage.setItem("lp_" + id, $(id).value.trim()); } catch {} });
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function call(body) {
+  const base = $("sbUrl").value.trim().replace(/\/$/, "");
+  const key = $("sbKey").value.trim();
+  const fn = $("fnName").value.trim() || "link-preview";
+  const res = await fetch(`${base}/functions/v1/${fn}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let data; try { data = JSON.parse(text); } catch { data = { error: text.slice(0, 300) }; }
+  if (!res.ok) throw new Error(`${res.status}: ${data.error || data.message || data.msg || text.slice(0, 200)}`);
+  return data;
+}
+
+function row(r) {
+  const verdict = r.error ? ["bad", "Error"]
+    : r.blocked ? ["bad", "Blocked"]
+    : r.ok && r.price != null ? ["ok", "Picture + price"]
+    : r.ok ? ["part", "No price"]
+    : ["part", "Partial"];
+  const price = r.price != null ? `${r.currency === "GBP" || !r.currency ? "£" : r.currency + " "}${Number(r.price).toFixed(2)}` : "—";
+  const img = r.image ? `<img class="thumb" src="${esc(r.image)}" alt="" referrerpolicy="no-referrer" loading="lazy">` : `<div class="thumb"></div>`;
+  const src = r.sources ? Object.entries(r.sources).map(([k, v]) => `${k}: ${v}`).join(", ") : "";
+  return `<tr>
+    <td>${img}</td>
+    <td><span class="pill ${verdict[0]}">${verdict[1]}</span><div class="muted" style="margin-top:6px">${esc(r.store || "")}</div></td>
+    <td>${esc(r.title || "—")}${r.url ? `<div class="muted"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.url)}</a></div>` : ""}</td>
+    <td style="white-space:nowrap;font-weight:600">${esc(price)}</td>
+    <td class="muted">HTTP ${esc(r.status ?? "—")} · ${esc(r.ms ?? "?")} ms${r.blocked ? `<br>blocked: ${esc(r.blocked)}` : ""}${r.error ? `<br>${esc(r.error)}` : ""}${src ? `<br>from ${esc(src)}` : ""}</td>
+  </tr>`;
+}
+
+$("run").addEventListener("click", async () => {
+  const urls = $("links").value.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  if (!urls.length) return;
+  if (!$("sbUrl").value.trim() || !$("sbKey").value.trim()) { $("summary").textContent = "Add your project URL and key first."; return; }
+  $("run").disabled = true;
+  $("out").innerHTML = "";
+  $("summary").textContent = `Testing ${urls.length} links…`;
+  let results = [];
+  try {
+    if ($("oneByOne").checked) {
+      for (const u of urls) {
+        let r;
+        try { r = await call({ url: u }); } catch (e) { r = { input: u, error: e.message }; }
+        results.push(r);
+        $("out").insertAdjacentHTML("beforeend", row(r));
+      }
+    } else {
+      results = (await call({ urls })).results;
+      $("out").innerHTML = results.map(row).join("");
+    }
+    const full = results.filter((r) => r.ok && r.price != null).length;
+    const blocked = results.filter((r) => r.blocked || r.error).length;
+    $("summary").textContent = `${full} of ${results.length} got picture + price · ${blocked} blocked or failed`;
+  } catch (e) {
+    $("summary").textContent = e.message;
+  } finally {
+    $("run").disabled = false;
+  }
+});
+</script>
+</body>
+</html>

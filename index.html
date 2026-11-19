@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wishlist</title>
+<meta name="theme-color" content="#1F5A43">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #F4F5F1; --card: #FFFFFF; --ink: #1B2420; --muted: #5B6660; --line: #E2E5DF; --line2: #C9CFC8;
+    --pine: #1F5A43; --pine-ink: #163F2F; --pine-tint: #D4E6DB; --accent: #B8324A; --accent-tint: #FDF5F6;
+    --amber: #8A5300; --amber-tint: #FBEFD9; --chip: #EEF1EC;
+    --display: 'Bricolage Grotesque', Inter, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Inter, system-ui, -apple-system, Segoe UI, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: .55; }
+  a { color: var(--pine); }
+  :focus-visible { outline: 3px solid #6AA88A; outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .display { font-family: var(--display); letter-spacing: -0.01em; }
+
+  /* header */
+  .top { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+  .top-in { max-width: 1360px; margin: 0 auto; padding: 12px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 700; }
+  .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--pine); display: grid; place-items: center; }
+  .tabs { display: flex; gap: 4px; background: var(--chip); padding: 4px; border-radius: 999px; }
+  .tab { border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; padding: 8px 16px; min-height: 40px; border-radius: 999px; display: flex; align-items: center; gap: 8px; }
+  .tab[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(27,36,32,.12); }
+  .count { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--line); border-radius: 999px; padding: 1px 8px; }
+  .grow { flex: 1 1 40px; }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; min-height: 44px; flex: 0 1 260px; }
+  .search input { border: 0; background: transparent; outline: none; width: 100%; font-size: 14px; }
+  .me { position: relative; }
+  .avatar { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-weight: 700; color: var(--pine); }
+  .menu { position: absolute; right: 0; top: 52px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgba(27,36,32,.14); padding: 8px; min-width: 240px; display: flex; flex-direction: column; z-index: 30; }
+  .menu .who { padding: 8px 12px; font-size: 13px; color: var(--muted); }
+  .menu a, .menu button { text-align: left; border: 0; background: transparent; padding: 10px 12px; border-radius: 10px; font-size: 14px; color: var(--ink); text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+  .menu a:hover, .menu button:hover { background: var(--bg); }
+
+  .banner { background: var(--amber-tint); color: var(--amber); font-size: 14px; font-weight: 600; text-align: center; padding: 8px 16px; }
+
+  /* main */
+  main { max-width: 1360px; margin: 0 auto; padding: 28px 32px 64px; display: flex; flex-direction: column; gap: 24px; }
+  .hero { background: var(--pine); border-radius: 20px; padding: 24px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
+  .hero h1 { margin: 0; font-family: var(--display); font-size: 28px; color: #fff; letter-spacing: -0.01em; }
+  .hero p { margin: 4px 0 0; color: var(--pine-tint); font-size: 15px; }
+  .hero form { flex: 999 1 420px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .paste { flex: 1 1 280px; display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 0 16px; min-height: 52px; }
+  .paste input { border: 0; outline: none; width: 100%; font-size: 16px; background: transparent; }
+  .btn { border: 0; border-radius: 12px; min-height: 44px; padding: 0 18px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-pine { background: var(--pine); color: #fff; }
+  .btn-line { background: #fff; color: var(--pine); border: 1px solid var(--pine); }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-big { min-height: 52px; padding: 0 22px; font-size: 16px; border-radius: 14px; }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #D5DAD3; background: #fff; font-size: 14px; font-weight: 500; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .stats { margin: 0; font-size: 14px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .stats strong { color: var(--ink); font-weight: 600; }
+  .checkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .small { font-size: 13px; color: var(--muted); }
+
+  .layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+  .sections { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 32px; }
+  .sec h2 { margin: 0 0 14px; display: flex; align-items: baseline; gap: 10px; font-family: var(--display); font-size: 22px; letter-spacing: -0.01em; }
+  .sec h2 span { font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; margin-bottom: 14px; }
+
+  .card { text-align: left; padding: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(27,36,32,.06); }
+  .card[aria-pressed="true"] { border-color: var(--accent); }
+  .card.bought { opacity: .62; }
+  .pic { position: relative; height: 150px; display: grid; place-items: center; background: #fff; border-bottom: 1px solid var(--line); }
+  .pic img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+  .ph { width: 100%; height: 100%; display: grid; place-items: center; }
+  .badge { position: absolute; top: 10px; left: 10px; background: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(27,36,32,.15); }
+  .badge.dark { background: var(--ink); color: #fff; }
+  .badge.bought { left: auto; right: 10px; background: var(--pine); color: #fff; display: flex; align-items: center; gap: 4px; }
+  .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; }
+  .card-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .card-sub { font-size: 13px; color: var(--muted); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; margin-top: auto; padding-top: 8px; }
+  .price { font-family: var(--display); font-size: 20px; font-weight: 700; }
+  .price.need { color: var(--amber); font-size: 16px; }
+  .unit { font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); }
+  .was { font-size: 12px; color: var(--muted); text-decoration: line-through; margin-left: 6px; font-family: Inter, sans-serif; font-weight: 500; }
+  .note { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--amber); background: var(--amber-tint); border-radius: 8px; padding: 4px 8px; margin-top: 4px; align-self: flex-start; }
+
+  .todo { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1.5px dashed var(--line2); border-radius: 16px; background: #FAFBF8; }
+  .todo-chip { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #D5DAD3; background: #fff; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .todo-chip[aria-pressed="true"] { border-color: var(--accent); }
+  .todo-chip.bought { text-decoration: line-through; color: var(--muted); }
+  .inline-new { display: inline-flex; gap: 6px; }
+  .inline-new input { min-height: 40px; border: 1.5px solid var(--pine); border-radius: 999px; padding: 0 14px; font-size: 14px; width: 200px; }
+
+  /* drawer */
+  .drawer { flex: 1 1 360px; max-width: 460px; min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 8px 24px rgba(27,36,32,.08); position: sticky; top: 92px; max-height: calc(100vh - 110px); overflow: auto; }
+  .eyebrow { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .drawer h2 { margin: 4px 0 0; font-family: var(--display); font-size: 26px; letter-spacing: -0.01em; }
+  .iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: #fff; display: grid; place-items: center; flex: none; }
+  .opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .opt { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 10px 10px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; }
+  .opt.top { border-color: var(--accent); background: var(--accent-tint); }
+  .opt-row { display: flex; align-items: center; gap: 14px; }
+  .opt-pic { flex: none; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); }
+  .opt-pic img { width: 100%; height: 100%; object-fit: contain; }
+  .opt-name { font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; line-height: 1.3; }
+  .opt-name:hover { text-decoration: underline; }
+  .opt-store { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); }
+  .opt-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .opt-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .linkbtn { border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; padding: 6px 4px; min-height: 32px; }
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .field input, .field select { min-height: 44px; border: 1px solid var(--line2); border-radius: 12px; padding: 0 12px; font-size: 15px; color: var(--ink); background: #fff; font-weight: 400; }
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .bought-btn[aria-pressed="true"] { background: var(--pine); color: #fff; }
+
+  /* dialog */
+  .scrim { position: fixed; inset: 0; background: rgba(20,28,24,.48); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow: auto; }
+  .dialog { width: 100%; max-width: 680px; background: #fff; border-radius: 24px; box-shadow: 0 24px 64px rgba(20,28,24,.28); padding: 28px 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .dialog h2 { margin: 0; font-family: var(--display); font-size: 26px; }
+  .preview { display: flex; gap: 20px; padding: 16px; border-radius: 18px; background: var(--bg); flex-wrap: wrap; }
+  .preview-pic { flex: none; width: 168px; height: 168px; border-radius: 14px; background: #fff; overflow: hidden; display: grid; place-items: center; }
+  .preview-pic img { width: 100%; height: 100%; object-fit: contain; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .status.ok { color: var(--pine); }
+  .status.warn { color: var(--amber); }
+  .status.err { color: var(--accent); }
+  .choice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px 8px 16px; border: 1.5px solid var(--line); border-radius: 14px; }
+  .choice.on { border-color: var(--accent); background: var(--accent-tint); }
+  .choice label.r { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; flex: 1 1 auto; cursor: pointer; }
+  .choice input[type=radio] { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+  .choice select, .choice input[type=text] { min-height: 44px; border: 1px solid var(--line2); border-radius: 12px; padding: 0 12px; font-size: 15px; background: #fff; }
+
+  .spinner { width: 16px; height: 16px; border-radius: 999px; border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,.2); max-width: calc(100vw - 32px); }
+
+  /* sign in */
+  .center { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .signin { width: 100%; max-width: 400px; background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .signin h1 { margin: 0; font-family: var(--display); font-size: 28px; }
+  .err { color: var(--accent); font-size: 14px; font-weight: 600; margin: 0; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); background: #fff; border-radius: 18px; border: 1px solid var(--line); }
+
+  @media (max-width: 640px) {
+    .top-in, main { padding-left: 16px; padding-right: 16px; }
+    .drawer { position: static; max-height: none; }
+    .row2 { grid-template-columns: minmax(0, 1fr); }
+    .dialog { padding: 22px 18px; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.4/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<noscript>Wishlist needs JavaScript.</noscript>
+
+<script type="text/babel" data-presets="react">
+// ===================== CONFIG =====================
+// Same project and key as the gym tracker / House Hunt (the public anon or publishable key).
+const SUPABASE_URL = "https://wvedhcuebfdfkhfvphlb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bkeGnvruQEz3MsVDZiJ03g_bhXXDjgC";
+const PREVIEW_FN = "link-preview";
+// Shops that block automatic fetching — saved with auto_fetch = false.
+const BLOCKED_STORES = ["argos.co.uk"];
+// ==================================================
+
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+const sb = window.__WL_SB || supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: "wl-auth" },
+});
+
+const LISTS = [{ id: "flat", name: "Flat" }, { id: "xmas", name: "Christmas" }];
+const DEFAULT_CATS = { flat: ["Kitchen", "Bathroom", "Lounge", "Bedroom", "Cleaning"], xmas: ["Christmas"] };
+
+// ---------- helpers ----------
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const num = (v) => (v == null || v === "" ? null : Number(v));
+const gbp = (n) => "£" + Number(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const parsePrice = (s) => {
+  const m = String(s ?? "").replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/);
+  return m ? Math.round(parseFloat(m[1]) * 100) / 100 : null;
+};
+const storeOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+const isBlockedStore = (store) => BLOCKED_STORES.includes(store);
+const dayLabel = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const today = new Date();
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === today.toDateString()) return "today " + time;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+const shortDate = (iso) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "");
+const initials = (name) => (name || "?").trim().slice(0, 1).toUpperCase();
+const words = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/)
+  .filter((w) => w.length > 2).map((w) => w.replace(/(es|s)$/, ""));
+
+function cleanUrl(raw) {
+  const u = new URL(String(raw).trim());
+  u.hash = "";
+  const host = u.hostname.replace(/^www\./, "");
+  const am = /^amazon\./.test(host) && u.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/i);
+  if (am) return `https://${u.hostname}/dp/${am[1].toUpperCase()}`;
+  const ar = host === "argos.co.uk" && u.pathname.match(/\/product\/(\d+)/);
+  if (ar) return `https://www.argos.co.uk/product/${ar[1]}`;
+  for (const k of [...u.searchParams.keys()]) {
+    if (/^(utm_.*|gclid|gclsrc|gbraid|wbraid|gad_.*|fbclid|msclkid|mcid|cmpid|tag|ref|srsltid|hv.*|linkcode|psc|th|smid)$/i.test(k)) u.searchParams.delete(k);
+  }
+  return u.toString();
+}
+
+// Best guess at which existing item a product belongs to (word overlap).
+function suggestItem(items, title) {
+  const t = new Set(words(title));
+  let best = null, score = 0;
+  for (const it of items) {
+    const w = words(it.title);
+    if (!w.length) continue;
+    const hit = w.filter((x) => t.has(x)).length / w.length;
+    if (hit > score) { score = hit; best = it; }
+  }
+  return score >= 0.5 ? best : null;
+}
+
+// ---------- icons ----------
+const Svg = ({ children, size = 18, stroke = "currentColor", sw = 2, fill = "none" }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
+const IGift = (p) => <Svg {...p}><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5" /></Svg>;
+const ISearch = (p) => <Svg {...p}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>;
+const ILink = (p) => <Svg {...p}><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></Svg>;
+const IPlus = (p) => <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>;
+const IX = (p) => <Svg {...p}><path d="M6 6l12 12M18 6 6 18" /></Svg>;
+const ICheck = (p) => <Svg {...p}><path d="M5 12l5 5L20 7" /></Svg>;
+const IRefresh = (p) => <Svg {...p}><path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 4v5h-5" /></Svg>;
+const IExt = (p) => <Svg {...p}><path d="M14 4h6v6" /><path d="M20 4 10 14" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></Svg>;
+const IClock = (p) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Svg>;
+const IImage = (p) => <Svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-9 9" /></Svg>;
+const IStar = ({ on, color }) => <Svg size={22} sw={1.8} stroke={on ? color : "#5B6660"} fill={on ? color : "none"}><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" /></Svg>;
+
+function Pic({ src, size = 40 }) {
+  const [bad, setBad] = useState(false);
+  useEffect(() => setBad(false), [src]);
+  if (!src || bad) return <div className="ph" style={{ background: "#F4F5F1" }}><IImage size={size} stroke="#7A857F" sw={1.5} /></div>;
+  return <img src={src} alt="" referrerPolicy="no-referrer" loading="lazy" onError={() => setBad(true)} />;
+}
+
+// ===================== AUTH SCREENS =====================
+function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true); setErr("");
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (error) setErr(navigator.onLine ? "That email and password don’t match." : "You’re offline. Connect to sign in.");
+  }
+  return (
+    <div className="center">
+      <form className="signin" onSubmit={submit}>
+        <div className="brand"><span className="logo"><IGift size={20} stroke="#fff" /></span>Wishlist</div>
+        <h1>Sign in</h1>
+        <p className="small" style={{ margin: 0 }}>Use your gym tracker email and password.</p>
+        <label className="field">Email<input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <label className="field">Password<input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+        {err && <p className="err" role="alert">{err}</p>}
+        <button className="btn btn-pine btn-big" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+      </form>
+    </div>
+  );
+}
+
+function NotMember() {
+  return (
+    <div className="center">
+      <div className="signin">
+        <h1>Not set up yet</h1>
+        <p style={{ margin: 0 }}>This account isn’t set up for the wishlist yet.</p>
+        <button className="btn btn-line" onClick={() => sb.auth.signOut()}>Sign out</button>
+      </div>
+    </div>
+  );
+}
+
+function Loading({ text = "Loading…" }) {
+  return <div className="center"><div className="status ok"><span className="spinner" />{text}</div></div>;
+}
+
+// ===================== APP =====================
+function App() {
+  const [session, setSession] = useState(undefined);
+  const [member, setMember] = useState(null);
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    const { data } = sb.auth.onAuthStateChange((_e, s) => setSession(s ?? null));
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const uid = session?.user?.id;
+  useEffect(() => {
+    if (!uid) { setMember(null); return; }
+    const key = "wl-member-" + uid;
+    const cached = ls.get(key, null);
+    setMember(cached);
+    if (!navigator.onLine) return;
+    sb.rpc("wl_is_member").then(({ data, error }) => {
+      if (error) { if (cached == null) setMember(false); return; }
+      ls.set(key, data === true);
+      setMember(data === true);
+    });
+  }, [uid]);
+
+  if (session === undefined) return <Loading />;
+  if (!session) return <SignIn />;
+  if (member === null) return <Loading text="Checking your account…" />;
+  if (member === false) return <NotMember />;
+  return <Wishlist uid={uid} />;
+}
+
+function Wishlist({ uid }) {
+  const cacheKey = "wl-cache-" + uid;
+  const cached = ls.get(cacheKey, { items: [], options: [], names: {} });
+  const [items, setItems] = useState(cached.items);
+  const [options, setOptions] = useState(cached.options);
+  const [names, setNames] = useState(cached.names || {});
+  const [loaded, setLoaded] = useState(cached.items.length > 0);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [list, setList] = useState(() => ls.get("wl-list", "flat"));
+  const [cat, setCat] = useState("All");
+  const [q, setQ] = useState("");
+  const [sel, setSel] = useState(null);
+  const [draft, setDraft] = useState(null);
+  const [toast, setToast] = useState("");
+  const [checking, setChecking] = useState(null);
+  const [menu, setMenu] = useState(false);
+  const [paste, setPaste] = useState("");
+  const toastTimer = useRef(null);
+
+  const say = useCallback((msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 4000);
+  }, []);
+
+  // ---------- data ----------
+  const load = useCallback(async () => {
+    if (!navigator.onLine) return;
+    const [a, b, c] = await Promise.all([
+      sb.from("wl_items").select("*").order("sort").order("created_at"),
+      sb.from("wl_options").select("*").order("created_at"),
+      sb.rpc("wl_member_names"),
+    ]);
+    if (a.error || b.error) { say("Couldn’t load the list: " + (a.error || b.error).message); return; }
+    const nm = {};
+    (c.data || []).forEach((r) => { nm[r.user_id] = r.display_name; });
+    setItems(a.data); setOptions(b.data); setNames(nm); setLoaded(true);
+    ls.set(cacheKey, { items: a.data, options: b.data, names: nm });
+  }, [cacheKey, say]);
+
+  const loadSoon = useRef(null);
+  const reload = useCallback(() => { clearTimeout(loadSoon.current); loadSoon.current = setTimeout(load, 250); }, [load]);
+
+  useEffect(() => {
+    load();
+    const ch = sb.channel("wl-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "wl_items" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "wl_options" }, reload)
+      .subscribe();
+    const up = () => { setOnline(true); load(); };
+    const down = () => setOnline(false);
+    const vis = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    document.addEventListener("visibilitychange", vis);
+    return () => {
+      sb.removeChannel(ch);
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+      document.removeEventListener("visibilitychange", vis);
+    };
+  }, [load, reload]);
+
+  useEffect(() => { ls.set("wl-list", list); }, [list]);
+
+  // + Wishlist button: #add?url=…&title=…&image=…&price=…&store=…
+  useEffect(() => {
+    const fromHash = () => {
+      const h = location.hash;
+      if (!h.startsWith("#add?")) return;
+      const p = new URLSearchParams(h.slice(5));
+      history.replaceState(null, "", location.pathname + location.search);
+      let url = p.get("url") || "";
+      try { url = cleanUrl(url); } catch {}
+      if (!/^https?:\/\//i.test(url)) return;
+      setDraft({
+        source: "button", url, store: p.get("store") || storeOf(url),
+        title: p.get("title") || "", image: p.get("image") || "", price: p.get("price") || "",
+        loading: false, blocked: null, error: "",
+      });
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, []);
+
+  const optsByItem = useMemo(() => {
+    const m = {};
+    options.forEach((o) => { (m[o.item_id] = m[o.item_id] || []).push(o); });
+    return m;
+  }, [options]);
+
+  const topOf = (it) => {
+    const os = optsByItem[it.id] || [];
+    return os.find((o) => o.id === it.top_option_id) || (os.length === 1 ? os[0] : null);
+  };
+  const priceOf = (it) => {
+    const os = optsByItem[it.id] || [];
+    const t = topOf(it);
+    if (t && t.price != null) return num(t.price) * it.qty;
+    const ps = os.filter((o) => o.price != null).map((o) => num(o.price));
+    return ps.length ? Math.min(...ps) * it.qty : 0;
+  };
+
+  // ---------- mutations ----------
+  const guard = () => { if (!navigator.onLine) { say("You’re offline — changes are paused."); return false; } return true; };
+  const fail = (error) => { if (error) { say("Something went wrong: " + error.message); return true; } return false; };
+
+  async function fetchPreview(url, targetItemId) {
+    if (!guard()) return;
+    let clean;
+    try { clean = cleanUrl(url); } catch { say("That doesn’t look like a link."); return; }
+    const base = { source: "paste", url: clean, store: storeOf(clean), title: "", image: "", price: "", targetItemId, loading: true, blocked: null, error: "" };
+    setDraft(base);
+    const { data, error } = await sb.functions.invoke(PREVIEW_FN, { body: { url: clean } });
+    setDraft((d) => {
+      if (!d || d.url !== clean) return d;
+      if (error) return { ...d, loading: false, error: "Couldn’t fetch the page. Fill in the details below." };
+      return {
+        ...d, loading: false,
+        url: data.url || clean, store: data.store || d.store,
+        title: data.title || "", image: data.image || "",
+        price: data.price != null ? Number(data.price).toFixed(2) : "",
+        blocked: data.blocked || (isBlockedStore(data.store) ? "blocked" : null),
+        error: data.error || "",
+      };
+    });
+  }
+
+  async function saveDraft(d, choice) {
+    if (!guard()) return;
+    const price = parsePrice(d.price);
+    let itemId = choice.itemId;
+    if (choice.mode === "new") {
+      const same = items.filter((i) => i.list === choice.list && i.category === choice.category);
+      const sort = (same.length ? Math.max(...same.map((i) => i.sort)) : 0) + 10;
+      const { data, error } = await sb.from("wl_items")
+        .insert({ list: choice.list, category: choice.category, title: choice.itemTitle.trim(), qty: 1, sort })
+        .select().single();
+      if (fail(error)) return;
+      itemId = data.id;
+    }
+    const { error } = await sb.from("wl_options").insert({
+      item_id: itemId, url: d.url, store: d.store || storeOf(d.url),
+      title: (d.title || "").trim() || null, image: /^https?:\/\//i.test(d.image || "") ? d.image : null,
+      price, price_checked_at: price != null ? new Date().toISOString() : null,
+      auto_fetch: !d.blocked && !isBlockedStore(d.store),
+    });
+    if (fail(error)) return;
+    setDraft(null); setPaste("");
+    const it = items.find((i) => i.id === itemId);
+    if (it) { setList(it.list); }
+    else if (choice.mode === "new") setList(choice.list);
+    setSel(itemId);
+    say("Saved.");
+    load();
+  }
+
+  async function addItem(title, l, category) {
+    if (!guard() || !title.trim()) return;
+    const same = items.filter((i) => i.list === l && i.category === category);
+    const sort = (same.length ? Math.max(...same.map((i) => i.sort)) : 0) + 10;
+    const { data, error } = await sb.from("wl_items").insert({ list: l, category, title: title.trim(), qty: 1, sort }).select().single();
+    if (fail(error)) return;
+    setSel(data.id); load();
+  }
+  async function updateItem(id, patch) {
+    if (!guard()) return;
+    const { error } = await sb.from("wl_items").update(patch).eq("id", id);
+    if (!fail(error)) load();
+  }
+  async function deleteItem(it) {
+    if (!guard() || !confirm(`Remove “${it.title}” and its links?`)) return;
+    const { error } = await sb.from("wl_items").delete().eq("id", it.id);
+    if (!fail(error)) { setSel(null); load(); }
+  }
+  async function updateOption(id, patch) {
+    if (!guard()) return;
+    const { error } = await sb.from("wl_options").update(patch).eq("id", id);
+    if (!fail(error)) load();
+  }
+  async function deleteOption(o) {
+    if (!guard() || !confirm("Remove this link?")) return;
+    const { error } = await sb.from("wl_options").delete().eq("id", o.id);
+    if (!fail(error)) load();
+  }
+  function toggleBought(it) {
+    updateItem(it.id, it.bought_by ? { bought_by: null, bought_at: null } : { bought_by: uid, bought_at: new Date().toISOString() });
+  }
+  function setTop(it, o) {
+    updateItem(it.id, { top_option_id: it.top_option_id === o.id ? null : o.id });
+  }
+
+  async function checkPrices() {
+    if (!guard() || checking) return;
+    const todo = options.filter((o) => o.auto_fetch);
+    if (!todo.length) { say("Nothing to check yet."); return; }
+    setChecking({ done: 0, total: todo.length });
+    let changed = 0, failed = 0, nowBlocked = 0;
+    for (let i = 0; i < todo.length; i += 20) {
+      const chunk = todo.slice(i, i + 20);
+      const { data, error } = await sb.functions.invoke(PREVIEW_FN, { body: { urls: chunk.map((o) => o.url) } });
+      if (error || !data?.results) { failed += chunk.length; setChecking({ done: i + chunk.length, total: todo.length }); continue; }
+      await Promise.all(chunk.map((o, k) => {
+        const r = data.results[k] || {};
+        if (r.blocked) { nowBlocked++; return sb.from("wl_options").update({ auto_fetch: false }).eq("id", o.id); }
+        if (r.error || !r.ok) { failed++; return null; }
+        const patch = { price_checked_at: new Date().toISOString() };
+        if (r.price != null && num(o.price) !== num(r.price)) {
+          patch.previous_price = o.price; patch.price = r.price; changed++;
+        }
+        if (!o.image && r.image) patch.image = r.image;
+        if (!o.title && r.title) patch.title = r.title;
+        return sb.from("wl_options").update(patch).eq("id", o.id);
+      }));
+      setChecking({ done: Math.min(i + chunk.length, todo.length), total: todo.length });
+    }
+    setChecking(null);
+    await load();
+    const parts = [`Checked ${todo.length} price${todo.length === 1 ? "" : "s"}`, `${changed} changed`];
+    if (failed) parts.push(`${failed} couldn’t be reached`);
+    if (nowBlocked) parts.push(`${nowBlocked} now blocked (use + Wishlist)`);
+    say(parts.join(" · "));
+  }
+
+  // ---------- derived ----------
+  const inList = items.filter((i) => i.list === list);
+  const catsFor = (l) => {
+    const fromData = items.filter((i) => i.list === l).map((i) => i.category);
+    return Array.from(new Set([...(DEFAULT_CATS[l] || []), ...fromData]));
+  };
+  const cats = catsFor(list);
+  const needle = q.trim().toLowerCase();
+  const matches = (it) => !needle || it.title.toLowerCase().includes(needle) ||
+    (optsByItem[it.id] || []).some((o) => (o.title || "").toLowerCase().includes(needle) || (o.store || "").includes(needle));
+  const shownCats = (cat === "All" || !cats.includes(cat)) ? cats : [cat];
+  const total = inList.filter((i) => !i.bought_by).reduce((s, i) => s + priceOf(i), 0);
+  const lastChecked = options.filter((o) => o.auto_fetch && o.price_checked_at).map((o) => o.price_checked_at).sort().pop();
+  const selItem = items.find((i) => i.id === sel) || null;
+  const me = names[uid] || "";
+
+  if (!loaded && online) return <Loading text="Loading your list…" />;
+
+  return (
+    <>
+      <header className="top">
+        <div className="top-in">
+          <div className="brand"><span className="logo"><IGift size={20} stroke="#fff" /></span>Wishlist</div>
+          <nav className="tabs" aria-label="Lists">
+            {LISTS.map((l) => (
+              <button key={l.id} type="button" className="tab" aria-pressed={list === l.id}
+                onClick={() => { setList(l.id); setCat("All"); setSel(null); }}>
+                {l.name}<span className="count">{items.filter((i) => i.list === l.id).length}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="grow" />
+          <label className="search">
+            <ISearch stroke="#5B6660" />
+            <span className="sr">Search your list</span>
+            <input type="search" placeholder="Search your list" value={q} onChange={(e) => setQ(e.target.value)} />
+          </label>
+          <div className="me">
+            <button type="button" className="avatar" aria-label="Account menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>{initials(me)}</button>
+            {menu && (
+              <div className="menu" role="menu" onKeyDown={(e) => e.key === "Escape" && setMenu(false)}>
+                <span className="who">Signed in{me ? " as " + me : ""}</span>
+                <a role="menuitem" href="./bookmarklet.html">Get the + Wishlist button</a>
+                <button role="menuitem" type="button" onClick={() => sb.auth.signOut()}>Sign out</button>
+              </div>
+            )}
+          </div>
+        </div>
+        {!online && <div className="banner" role="status">You’re offline — showing your saved list. Changes are paused.</div>}
+      </header>
+
+      <main onClick={() => menu && setMenu(false)}>
+        <section className="hero" aria-label="Add from a link">
+          <div style={{ flex: "1 1 360px" }}>
+            <h1>Seen something you like?</h1>
+            <p>Paste the link, or use the + Wishlist button on the shop’s page (needed for Argos).</p>
+          </div>
+          <form onSubmit={(e) => { e.preventDefault(); if (paste.trim()) fetchPreview(paste); }}>
+            <label className="paste">
+              <ILink size={20} stroke="#5B6660" />
+              <span className="sr">Shop link</span>
+              <input type="url" required placeholder="https://www.shop.co.uk/product/…" value={paste} onChange={(e) => setPaste(e.target.value)} disabled={!online} />
+            </label>
+            <button className="btn btn-accent btn-big" disabled={!online}><IPlus stroke="#fff" sw={2.4} />Add</button>
+          </form>
+        </section>
+
+        <div className="toolbar">
+          {cats.length > 1 ? (
+            <div className="chips" role="group" aria-label="Filter by category">
+              {["All", ...cats].map((c) => (
+                <button key={c} type="button" className="chip" aria-pressed={cat === c} onClick={() => setCat(c)}>
+                  {c} · {c === "All" ? inList.length : inList.filter((i) => i.category === c).length}
+                </button>
+              ))}
+            </div>
+          ) : <div />}
+          <div className="checkrow">
+            <p className="stats">
+              <span><strong>{inList.length}</strong> items</span>
+              <span><strong>{inList.filter((i) => (optsByItem[i.id] || []).length).length}</strong> with a link</span>
+              <span><strong>{gbp(total)}</strong> priced so far</span>
+              <span><strong>{inList.filter((i) => i.bought_by).length}</strong> bought</span>
+            </p>
+            <span className="small">{lastChecked ? "Prices checked " + dayLabel(lastChecked) : ""}</span>
+            <button type="button" className="btn btn-line" onClick={checkPrices} disabled={!online || !!checking}>
+              {checking ? <><span className="spinner" />Checking {checking.done}/{checking.total}…</> : <><IRefresh size={16} sw={2.2} />Check prices</>}
+            </button>
+          </div>
+        </div>
+
+        <div className="layout">
+          <div className="sections">
+            {shownCats.map((c) => {
+              const its = inList.filter((i) => i.category === c && matches(i));
+              if (needle && !its.length) return null;
+              const linked = its.filter((i) => (optsByItem[i.id] || []).length);
+              const todo = its.filter((i) => !(optsByItem[i.id] || []).length);
+              return (
+                <section key={c} className="sec" aria-label={c}>
+                  <h2>{c}<span>{its.length} item{its.length === 1 ? "" : "s"}{todo.length ? ` · ${todo.length} still need${todo.length === 1 ? "s" : ""} a link` : ""}</span></h2>
+                  {linked.length > 0 && (
+                    <div className="grid">
+                      {linked.map((it) => <ItemCard key={it.id} it={it} opts={optsByItem[it.id]} top={topOf(it)} selected={sel === it.id} onPick={() => setSel(sel === it.id ? null : it.id)} />)}
+                    </div>
+                  )}
+                  <TodoBox items={todo} sel={sel} onPick={(id) => setSel(sel === id ? null : id)}
+                    onAdd={(t) => addItem(t, list, c)} online={online} />
+                </section>
+              );
+            })}
+            {needle && !inList.some(matches) && <div className="empty">Nothing matches “{q}”.</div>}
+          </div>
+
+          {selItem && (
+            <Drawer key={selItem.id} it={selItem} opts={optsByItem[selItem.id] || []} top={topOf(selItem)} names={names}
+              online={online} catsFor={catsFor}
+              onClose={() => setSel(null)} onAddLink={(url) => fetchPreview(url, selItem.id)}
+              onUpdate={(p) => updateItem(selItem.id, p)} onDelete={() => deleteItem(selItem)}
+              onBought={() => toggleBought(selItem)} onTop={(o) => setTop(selItem, o)}
+              onUpdateOption={updateOption} onDeleteOption={deleteOption} />
+          )}
+        </div>
+      </main>
+
+      {draft && <AddDialog draft={draft} setDraft={setDraft} items={items} list={list} catsFor={catsFor}
+        onSave={saveDraft} onClose={() => setDraft(null)} />}
+      {toast && <div className="toast" role="status">{toast}</div>}
+    </>
+  );
+}
+
+// ===================== PIECES =====================
+function ItemCard({ it, opts, top, selected, onPick }) {
+  const o = top || opts[0];
+  const n = opts.length;
+  const prices = opts.filter((x) => x.price != null).map((x) => num(x.price));
+  const price = top && top.price != null ? num(top.price) : (prices.length ? Math.min(...prices) : null);
+  const priceText = price == null ? "Price needed" : (!top && n > 1 ? "from " : "") + gbp(price);
+  const showWas = top && top.previous_price != null && top.price != null && num(top.previous_price) !== num(top.price);
+  return (
+    <button type="button" className={"card" + (it.bought_by ? " bought" : "")} aria-pressed={selected} onClick={onPick}>
+      <span className="pic">
+        <Pic src={o.image} />
+        {n > 1 && <span className="badge">{n} options</span>}
+        {n < 2 && it.qty > 1 && <span className="badge dark">× {it.qty}</span>}
+        {it.bought_by && <span className="badge bought"><ICheck size={13} sw={3} />Bought</span>}
+      </span>
+      <span className="card-body">
+        <span className="card-title">{it.title}</span>
+        <span className="card-sub">{n > 1 ? `${n} options to compare` : (o.title || o.store)}</span>
+        <span className="card-foot">
+          <span className={"price" + (price == null ? " need" : "")}>{priceText}{price != null && it.qty > 1 && <span className="unit"> each</span>}{showWas && <span className="was">{gbp(top.previous_price)}</span>}</span>
+          <span className="small">{n > 1 && !top ? "" : o.store}</span>
+        </span>
+        {!o.auto_fetch && (
+          <span className="note"><IClock size={12} sw={2.4} />{o.price == null ? "Use + Wishlist on " + o.store : "Price as of " + shortDate(o.price_checked_at)}</span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+function TodoBox({ items, sel, onPick, onAdd, online }) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  return (
+    <div className="todo">
+      <span className="small" style={{ fontWeight: 600 }}>{items.length ? "No link yet. Click one to add a link." : "Add something to this category."}</span>
+      <div className="chips">
+        {items.map((it) => (
+          <button key={it.id} type="button" className={"todo-chip" + (it.bought_by ? " bought" : "")} aria-pressed={sel === it.id} onClick={() => onPick(it.id)}>
+            {it.bought_by ? <ICheck size={14} sw={2.6} stroke="#1F5A43" /> : <IPlus size={14} sw={2.2} stroke="#5B6660" />}{it.title}{it.qty > 1 ? ` × ${it.qty}` : ""}
+          </button>
+        ))}
+        {adding ? (
+          <form className="inline-new" onSubmit={(e) => { e.preventDefault(); onAdd(name); setName(""); setAdding(false); }}>
+            <label className="sr" htmlFor="newItem">New item name</label>
+            <input id="newItem" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="New item" onKeyDown={(e) => e.key === "Escape" && setAdding(false)} />
+            <button className="btn btn-pine" style={{ minHeight: 40 }} disabled={!name.trim()}>Add</button>
+          </form>
+        ) : (
+          <button type="button" className="todo-chip" style={{ borderStyle: "dashed", color: "#1F5A43" }} onClick={() => setAdding(true)} disabled={!online}>
+            <IPlus size={14} sw={2.4} stroke="#1F5A43" />New item
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onUpdate, onDelete, onBought, onTop, onUpdateOption, onDeleteOption }) {
+  const [link, setLink] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ title: it.title, qty: it.qty, list: it.list, category: it.category });
+  const n = opts.length;
+  const hint = n === 0
+    ? "No link yet. Paste one below, or open a shop and click + Wishlist."
+    : n === 1 ? "One option so far. Add another link to compare. Click the product to open the shop."
+    : `${n} options. Star your top pick. Click a product to open the shop.`;
+  const listName = LISTS.find((l) => l.id === it.list).name;
+  return (
+    <aside className="drawer" aria-label="Item details">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div>
+          <span className="eyebrow">{it.list === "xmas" ? listName : `${listName} · ${it.category}`}</span>
+          <h2>{it.title}{it.qty > 1 ? ` × ${it.qty}` : ""}</h2>
+        </div>
+        <button type="button" className="iconbtn" aria-label="Close" onClick={onClose}><IX /></button>
+      </div>
+
+      {editing ? (
+        <form style={{ display: "flex", flexDirection: "column", gap: 12 }} onSubmit={(e) => {
+          e.preventDefault();
+          onUpdate({ title: form.title.trim() || it.title, qty: Math.max(1, Math.min(99, parseInt(form.qty, 10) || 1)), list: form.list, category: form.category.trim() || "Other" });
+          setEditing(false);
+        }}>
+          <label className="field">Name<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
+          <div className="row2">
+            <label className="field">How many<input type="number" min="1" max="99" value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} /></label>
+            <label className="field">List
+              <select value={form.list} onChange={(e) => setForm({ ...form, list: e.target.value, category: catsFor(e.target.value)[0] })}>
+                {LISTS.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </label>
+          </div>
+          <label className="field">Category
+            <input list="catlist" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+            <datalist id="catlist">{catsFor(form.list).map((c) => <option key={c} value={c} />)}</datalist>
+          </label>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+            <button className="btn btn-pine" disabled={!online}>Save</button>
+          </div>
+        </form>
+      ) : (
+        <p className="small" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{hint}</p>
+      )}
+
+      {n > 0 && (
+        <ul className="opts">
+          {opts.map((o) => <OptionRow key={o.id} o={o} isTop={n > 1 && top && top.id === o.id} canStar={n > 1}
+            online={online} onTop={() => onTop(o)} onSave={(p) => onUpdateOption(o.id, p)} onDelete={() => onDeleteOption(o)} />)}
+        </ul>
+      )}
+
+      <form style={{ display: "flex", flexDirection: "column", gap: 8 }} onSubmit={(e) => { e.preventDefault(); if (link.trim()) { onAddLink(link); setLink(""); } }}>
+        <label htmlFor="addOption" style={{ fontSize: 14, fontWeight: 600 }}>{n === 0 ? "Add a link" : "Add another option"}</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input id="addOption" type="url" required placeholder="Paste a shop link" value={link} onChange={(e) => setLink(e.target.value)} disabled={!online}
+            style={{ flex: "1 1 auto", minWidth: 0, minHeight: 44, border: "1px solid #C9CFC8", borderRadius: 12, padding: "0 14px", fontSize: 14 }} />
+          <button className="btn btn-pine" disabled={!online}>Add</button>
+        </div>
+      </form>
+
+      <div className="foot">
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <button type="button" className="btn btn-line bought-btn" aria-pressed={!!it.bought_by} onClick={onBought} disabled={!online}>
+            <ICheck size={16} sw={2.6} />{it.bought_by ? "Bought" : "Mark as bought"}
+          </button>
+          {it.bought_by && <span className="small">by {names[it.bought_by] || "someone"} · {shortDate(it.bought_at)}</span>}
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {!editing && <button type="button" className="btn btn-ghost" onClick={() => setEditing(true)} disabled={!online}>Edit</button>}
+          <button type="button" className="btn btn-ghost" onClick={onDelete} disabled={!online}>Remove item</button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function OptionRow({ o, isTop, canStar, online, onTop, onSave, onDelete }) {
+  const [edit, setEdit] = useState(false);
+  const [f, setF] = useState({ title: o.title || "", price: o.price != null ? Number(o.price).toFixed(2) : "", image: o.image || "" });
+  const showWas = o.previous_price != null && o.price != null && num(o.previous_price) !== num(o.price);
+  const note = o.auto_fetch
+    ? (o.price_checked_at ? "Checked " + dayLabel(o.price_checked_at) + " · updates with Check prices" : "Updates with Check prices")
+    : o.price == null
+    ? o.store + " blocks automatic fetching. Open the page and click + Wishlist, or add the price here."
+    : "Price as of " + shortDate(o.price_checked_at) + ". " + o.store + " can’t refresh automatically. Re-grab with + Wishlist.";
+  return (
+    <li className={"opt" + (isTop ? " top" : "")}>
+      <div className="opt-row">
+        <a className="opt-pic" href={o.url} target="_blank" rel="noopener" aria-label={`Open on ${o.store}`}><Pic src={o.image} size={26} /></a>
+        <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+          {isTop && <span className="eyebrow" style={{ color: "var(--accent)", fontWeight: 700 }}>Top pick</span>}
+          <a className="opt-name" href={o.url} target="_blank" rel="noopener">{o.title || o.url}</a>
+          <span className="opt-store">{o.store}<IExt size={12} /></span>
+        </div>
+        <div className="opt-side">
+          <span className={"price" + (o.price == null ? " need" : "")} style={{ fontSize: o.price == null ? 14 : 18 }}>{o.price == null ? "Price needed" : gbp(o.price)}</span>
+          {showWas && <span className="was" style={{ marginLeft: 0 }}>was {gbp(o.previous_price)}</span>}
+          {canStar && <button type="button" className="iconbtn" style={{ border: 0, background: "transparent" }} aria-pressed={!!isTop} aria-label="Make this our top pick" onClick={onTop} disabled={!online}><IStar on={isTop} color="#B8324A" /></button>}
+        </div>
+      </div>
+      {edit ? (
+        <form style={{ display: "flex", flexDirection: "column", gap: 10 }} onSubmit={(e) => {
+          e.preventDefault();
+          const price = parsePrice(f.price);
+          const patch = { title: f.title.trim() || null, image: /^https?:\/\//i.test(f.image.trim()) ? f.image.trim() : null };
+          if (price !== num(o.price)) Object.assign(patch, { price, previous_price: o.price, price_checked_at: new Date().toISOString() });
+          onSave(patch); setEdit(false);
+        }}>
+          <label className="field">Name<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
+          <div className="row2">
+            <label className="field">Price (£)<input inputMode="decimal" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></label>
+            <label className="field">Picture link<input type="url" value={f.image} onChange={(e) => setF({ ...f, image: e.target.value })} /></label>
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setEdit(false)}>Cancel</button>
+            <button className="btn btn-pine" disabled={!online}>Save</button>
+          </div>
+        </form>
+      ) : (
+        <div className="opt-actions">
+          <span className="small" style={{ fontSize: 12, color: o.auto_fetch ? "var(--muted)" : "var(--amber)" }}>{note}</span>
+          <span>
+            <button type="button" className="linkbtn" onClick={() => setEdit(true)} disabled={!online}>Edit</button>
+            <button type="button" className="linkbtn" onClick={onDelete} disabled={!online}>Remove</button>
+          </span>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function AddDialog({ draft, setDraft, items, list, catsFor, onSave, onClose }) {
+  const target = draft.targetItemId ? items.find((i) => i.id === draft.targetItemId) : null;
+  const suggestion = useMemo(() => (draft.title ? suggestItem(items, draft.title) : null), [draft.title, items]);
+  const [mode, setMode] = useState(null);
+  const [itemId, setItemId] = useState(null);
+  const [newList, setNewList] = useState(list);
+  const [newCat, setNewCat] = useState(catsFor(list)[0]);
+  const [itemTitle, setItemTitle] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const effMode = mode || (target || suggestion ? "existing" : "new");
+  const effItemId = itemId || (target || suggestion || items[0] || {}).id;
+  const effTitle = itemTitle || (draft.title || "").split(/[,|–(\[]/)[0].trim().slice(0, 60);
+  const sug = suggestion && !target ? items.find((i) => i.id === effItemId) : null;
+
+  const set = (k) => (e) => setDraft({ ...draft, [k]: e.target.value });
+  const canSave = !draft.loading && !saving && (effMode === "existing" ? !!effItemId : !!effTitle.trim());
+
+  let status;
+  if (draft.loading) status = <span className="status ok"><span className="spinner" />Fetching the picture and price…</span>;
+  else if (draft.source === "button") status = <span className="status ok"><ICheck size={16} sw={2.6} />From the + Wishlist button</span>;
+  else if (draft.blocked) status = <span className="status warn">{draft.store} blocks automatic fetching. Fill in below, or open the page and click + Wishlist.</span>;
+  else if (draft.error) status = <span className="status warn">{draft.error}</span>;
+  else status = <span className="status ok"><ICheck size={16} sw={2.6} />Found it</span>;
+
+  async function save() {
+    setSaving(true);
+    await onSave(draft, { mode: effMode, itemId: effItemId, list: newList, category: newCat, itemTitle: effTitle });
+    setSaving(false);
+  }
+
+  return (
+    <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="addTitle" onKeyDown={(e) => e.key === "Escape" && onClose()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2 id="addTitle">{target ? `Add an option for ${target.title}` : "Add from a link"}</h2>
+          <button type="button" className="iconbtn" aria-label="Close" onClick={onClose}><IX /></button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="small" style={{ wordBreak: "break-all" }}><a href={draft.url} target="_blank" rel="noopener">{draft.url}</a></div>
+          {status}
+        </div>
+
+        <div className="preview">
+          <div className="preview-pic"><Pic src={draft.image} size={44} /></div>
+          <div style={{ flex: "1 1 260px", minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+            <label className="field">Product name<input value={draft.title} onChange={set("title")} disabled={draft.loading} /></label>
+            <div className="row2">
+              <label className="field">Price (£)<input inputMode="decimal" value={draft.price} onChange={set("price")} placeholder="e.g. 24.99" disabled={draft.loading} /></label>
+              <label className="field">Shop<input value={draft.store} onChange={set("store")} disabled={draft.loading} /></label>
+            </div>
+            {!draft.loading && !draft.image && (
+              <label className="field">Picture link (optional)<input type="url" value={draft.image} onChange={set("image")} placeholder="Right-click the shop’s photo › Copy image address" /></label>
+            )}
+          </div>
+        </div>
+
+        {!target && (
+          <fieldset style={{ margin: 0, padding: 0, border: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            <legend style={{ fontSize: 14, fontWeight: 600, marginBottom: 10, padding: 0 }}>Save as</legend>
+            <div className={"choice" + (effMode === "existing" ? " on" : "")}>
+              <label className="r"><input type="radio" name="mode" checked={effMode === "existing"} onChange={() => setMode("existing")} />An option for</label>
+              <label className="sr" htmlFor="existing">Existing item</label>
+              <select id="existing" value={effItemId || ""} onChange={(e) => { setItemId(e.target.value); setMode("existing"); }} style={{ flex: "0 1 300px" }}>
+                {LISTS.map((l) => (
+                  <optgroup key={l.id} label={l.name}>
+                    {items.filter((i) => i.list === l.id).map((i) => <option key={i.id} value={i.id}>{i.title}{l.id === "flat" ? ` (${i.category})` : ""}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            <div className={"choice" + (effMode === "new" ? " on" : "")}>
+              <label className="r"><input type="radio" name="mode" checked={effMode === "new"} onChange={() => setMode("new")} />A new item</label>
+              {effMode === "new" && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, width: "100%" }}>
+                  <label className="sr" htmlFor="newTitle">Item name</label>
+                  <input id="newTitle" type="text" value={effTitle} onChange={(e) => setItemTitle(e.target.value)} placeholder="Item name" style={{ flex: "2 1 200px" }} />
+                  <label className="sr" htmlFor="newList">List</label>
+                  <select id="newList" value={newList} onChange={(e) => { setNewList(e.target.value); setNewCat(catsFor(e.target.value)[0]); }} style={{ flex: "1 1 120px" }}>
+                    {LISTS.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  </select>
+                  <label className="sr" htmlFor="newCat">Category</label>
+                  <select id="newCat" value={newCat} onChange={(e) => setNewCat(e.target.value)} style={{ flex: "1 1 120px" }}>
+                    {catsFor(newList).map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+            {sug && effMode === "existing" && <p className="small" style={{ margin: 0 }}>Looks like it belongs with <strong style={{ color: "var(--ink)" }}>{sug.title}</strong>.</p>}
+          </fieldset>
+        )}
+
+        <div className="foot" style={{ justifyContent: "flex-end" }}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn btn-accent" onClick={save} disabled={!canSave}>{saving ? "Saving…" : "Save"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
