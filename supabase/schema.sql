@@ -50,6 +50,9 @@ create table if not exists public.wl_items (
   top_option_id  uuid,
   bought_by      uuid references public.wl_members(user_id) on delete set null,
   bought_at      timestamptz,
+  promised_by_name   text check (promised_by_name is null or length(promised_by_name) between 1 and 60),  -- "Someone's getting this" (name optional)
+  promised_at        timestamptz,
+  promised_marked_by uuid references public.wl_members(user_id) on delete set null,
   sort           int  not null default 0,
   created_by     uuid default auth.uid(),
   created_at     timestamptz not null default now(),

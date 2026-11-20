@@ -14,12 +14,18 @@ Shared Christmas and flat wishlist for Jack and Jakey. It's a single `index.html
 6. **First run:** sign in, then press **Check prices** once. That fills in the pictures for everything except Argos.
 7. **+ Wishlist button:** open the menu (your initial, top right) and choose **Get the + Wishlist button**. Drag the button onto your bookmarks bar. Use it on Argos pages to add the masher and rice cooker pictures.
 
+## Updates that need SQL
+
+Run each of these once in the SQL Editor, in order (each is safe to re-run):
+
+- `supabase/migrations/2026-11-20-someones-getting-this.sql`: adds the "Someone's getting this" status.
+
 ## How it fits together
 
 | Piece | What it does |
 |---|---|
 | `wl_members` + `wl_is_member()` | Only the two of you get in. Every `wl_` table has a members-only rule. Other gym tracker accounts see nothing. |
-| `wl_items` | One row per thing you want: Flat or Christmas, category, quantity, top pick, and who bought it. |
+| `wl_items` | One row per thing you want: Flat or Christmas, category, quantity, top pick, who bought it, and who's getting it for you ("Someone's getting this", name optional). |
 | `wl_options` | One row per product link: picture, price, previous price and when it was last checked. `auto_fetch = false` for shops that block us (Argos). |
 | `link-preview` function | Reads the picture, name and price from a link. Takes `{ url }` or `{ urls: [...] }` (up to 20, used by Check prices). |
 | `bookmarklet.html` | Creates the + Wishlist button. It reads the product page in your own browser, then opens the app at `#add?url=…&title=…&image=…&price=…`. |

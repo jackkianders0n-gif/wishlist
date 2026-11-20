@@ -16,6 +16,7 @@
     --bg: #F4F5F1; --card: #FFFFFF; --ink: #1B2420; --muted: #5B6660; --line: #E2E5DF; --line2: #C9CFC8;
     --pine: #1F5A43; --pine-ink: #163F2F; --pine-tint: #D4E6DB; --accent: #B8324A; --accent-tint: #FDF5F6;
     --amber: #8A5300; --amber-tint: #FBEFD9; --chip: #EEF1EC;
+    --gift: #1D4E89; --gift-tint: #E3ECF7;
     --display: 'Bricolage Grotesque', Inter, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -93,6 +94,13 @@
   .badge { position: absolute; top: 10px; left: 10px; background: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(27,36,32,.15); }
   .badge.dark { background: var(--ink); color: #fff; }
   .badge.bought { left: auto; right: 10px; background: var(--pine); color: #fff; display: flex; align-items: center; gap: 4px; }
+  /* Status badges sit bottom-left so they never collide with "× 2" / "3 options". */
+  .badge.status { top: auto; bottom: 10px; left: 10px; right: auto; max-width: calc(100% - 20px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .badge.promised { background: var(--gift-tint); color: var(--gift); box-shadow: none; }
+  .promise-btn { color: var(--gift); border-color: var(--gift); }
+  .promise-btn[aria-pressed="true"] { background: var(--gift); color: #fff; }
+  .todo-chip.promised { border-color: #B9CDE6; }
+  .todo-chip .who { color: var(--gift); font-weight: 600; }
   .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; }
   .card-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
   .card-sub { font-size: 13px; color: var(--muted); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -226,6 +234,7 @@
     .pic img { max-width: calc(100% - 16px); max-height: 102px; }
     .badge { top: 8px; left: 8px; font-size: 11px; padding: 3px 8px; }
     .badge.bought { right: 8px; }
+    .badge.status { bottom: 8px; left: 8px; max-width: calc(100% - 16px); }
     .card-body { padding: 10px 11px 12px; }
     .card-title { font-size: 14px; }
     .card-sub { font-size: 12px; }
@@ -331,6 +340,11 @@ function suggestItem(items, title) {
   }
   return score >= 0.5 ? best : null;
 }
+
+// "Someone's getting this" / "Gift from …"
+const isPromised = (it) => !!it.promised_at;
+const giftLabel = (it) => (it.promised_by_name ? `Gift from ${it.promised_by_name}` : "Gift");
+const promiseLabel = (it) => (it.promised_by_name ? `${it.promised_by_name}’s getting this` : "Someone’s getting this");
 
 // ---------- icons ----------
 const Svg = ({ children, size = 18, stroke = "currentColor", sw = 2, fill = "none" }) => (
@@ -732,6 +746,18 @@ function Wishlist({ uid }) {
   function toggleBought(it) {
     updateItem(it.id, it.bought_by ? { bought_by: null, bought_at: null } : { bought_by: uid, bought_at: new Date().toISOString() });
   }
+  async function setPromise(it, name) {
+    if (!guard()) return;
+    const clean = (name || "").trim().slice(0, 60);
+    const { error } = await sb.from("wl_items").update({ promised_by_name: clean || null, promised_at: it.promised_at || new Date().toISOString(), promised_marked_by: uid }).eq("id", it.id);
+    if (error && /promised/i.test(error.message)) { say("Run the “Someone’s getting this” SQL in Supabase first (see README)."); return; }
+    if (!fail(error)) load();
+  }
+  async function clearPromise(it) {
+    if (!guard()) return;
+    const { error } = await sb.from("wl_items").update({ promised_by_name: null, promised_at: null, promised_marked_by: null }).eq("id", it.id);
+    if (!fail(error)) load();
+  }
   function setTop(it, o) {
     updateItem(it.id, { top_option_id: it.top_option_id === o.id ? null : o.id });
   }
@@ -779,7 +805,8 @@ function Wishlist({ uid }) {
   const matches = (it) => !needle || it.title.toLowerCase().includes(needle) ||
     (optsByItem[it.id] || []).some((o) => (o.title || "").toLowerCase().includes(needle) || (o.store || "").includes(needle));
   const shownCats = (cat === "All" || !cats.includes(cat)) ? cats : [cat];
-  const total = inList.filter((i) => !i.bought_by).reduce((s, i) => s + priceOf(i), 0);
+  const total = inList.filter((i) => !i.bought_by && !isPromised(i)).reduce((s, i) => s + priceOf(i), 0);
+  const promisedCount = inList.filter((i) => isPromised(i) && !i.bought_by).length;
   const lastChecked = options.filter((o) => o.auto_fetch && o.price_checked_at).map((o) => o.price_checked_at).sort().pop();
   const selItem = items.find((i) => i.id === sel) || null;
   const me = names[uid] || "";
@@ -856,6 +883,7 @@ function Wishlist({ uid }) {
               <span className="stat"><strong>{inList.filter((i) => (optsByItem[i.id] || []).length).length}</strong> with a link</span>
               <span className="stat"><strong>{gbp(total)}</strong><span className="only-desktop"> priced so far</span></span>
               <span className="stat only-desktop"><strong>{inList.filter((i) => i.bought_by).length}</strong> bought</span>
+              {promisedCount > 0 && <span className="stat only-desktop"><strong>{promisedCount}</strong> someone’s getting</span>}
             </p>
             <span className="small only-desktop">{lastChecked ? "Prices checked " + dayLabel(lastChecked) : ""}</span>
             <button type="button" className="btn btn-line check-btn" onClick={checkPrices} disabled={!online || !!checking}
@@ -895,6 +923,7 @@ function Wishlist({ uid }) {
               onClose={() => setSel(null)} onAddLink={(url) => fetchPreview(url, selItem.id)}
               onUpdate={(p) => updateItem(selItem.id, p)} onDelete={() => deleteItem(selItem)}
               onBought={() => toggleBought(selItem)} onTop={(o) => setTop(selItem, o)}
+              onPromise={(name) => setPromise(selItem, name)} onUnpromise={() => clearPromise(selItem)}
               onUpdateOption={updateOption} onDeleteOption={deleteOption} />
           )}
         </div>
@@ -922,7 +951,9 @@ function ItemCard({ it, opts, top, selected, onPick }) {
         <Pic src={o.image} />
         {n > 1 && <span className="badge">{n} options</span>}
         {n < 2 && it.qty > 1 && <span className="badge dark">× {it.qty}</span>}
-        {it.bought_by && <span className="badge bought"><ICheck size={13} sw={3} />Bought</span>}
+        {it.bought_by && !isPromised(it) && <span className="badge bought"><ICheck size={13} sw={3} />Bought</span>}
+        {it.bought_by && isPromised(it) && <span className="badge bought status" title={giftLabel(it)}>{giftLabel(it)}</span>}
+        {!it.bought_by && isPromised(it) && <span className="badge promised status" title={promiseLabel(it)}>{promiseLabel(it)}</span>}
       </span>
       <span className="card-body">
         <span className="card-title">{it.title}</span>
@@ -947,8 +978,9 @@ function TodoBox({ items, sel, onPick, onAdd, online }) {
       <span className="small" style={{ fontWeight: 600 }}>{items.length ? "No link yet. Click one to add a link." : "Add something to this category."}</span>
       <div className="chips">
         {items.map((it) => (
-          <button key={it.id} type="button" className={"todo-chip" + (it.bought_by ? " bought" : "")} aria-pressed={sel === it.id} onClick={() => onPick(it.id)}>
-            {it.bought_by ? <ICheck size={14} sw={2.6} stroke="#1F5A43" /> : <IPlus size={14} sw={2.2} stroke="#5B6660" />}{it.title}{it.qty > 1 ? ` × ${it.qty}` : ""}
+          <button key={it.id} type="button" className={"todo-chip" + (it.bought_by ? " bought" : isPromised(it) ? " promised" : "")} aria-pressed={sel === it.id} onClick={() => onPick(it.id)}>
+            {it.bought_by ? <ICheck size={14} sw={2.6} stroke="#1F5A43" /> : isPromised(it) ? <IGift size={14} sw={2.2} stroke="#1D4E89" /> : <IPlus size={14} sw={2.2} stroke="#5B6660" />}{it.title}{it.qty > 1 ? ` × ${it.qty}` : ""}
+            {!it.bought_by && isPromised(it) && <span className="who">· {it.promised_by_name || "someone"}</span>}
           </button>
         ))}
         {adding ? (
@@ -967,7 +999,9 @@ function TodoBox({ items, sel, onPick, onAdd, online }) {
   );
 }
 
-function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onUpdate, onDelete, onBought, onTop, onUpdateOption, onDeleteOption }) {
+function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onUpdate, onDelete, onBought, onTop, onUpdateOption, onDeleteOption, onPromise, onUnpromise }) {
+  const [asking, setAsking] = useState(false);
+  const [who, setWho] = useState(it.promised_by_name || "");
   const [link, setLink] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ title: it.title, qty: it.qty, list: it.list, category: it.category });
@@ -1032,14 +1066,39 @@ function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onU
         </div>
       </form>
 
-      <div className="foot">
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div className="foot" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button type="button" className="btn btn-line bought-btn" aria-pressed={!!it.bought_by} onClick={onBought} disabled={!online}>
             <ICheck size={16} sw={2.6} />{it.bought_by ? "Bought" : "Mark as bought"}
           </button>
-          {it.bought_by && <span className="small">by {names[it.bought_by] || "someone"} · {shortDate(it.bought_at)}</span>}
+          <button type="button" className="btn btn-line promise-btn" aria-pressed={isPromised(it)} disabled={!online}
+            onClick={() => { if (isPromised(it)) { onUnpromise(); setAsking(false); } else { setWho(""); setAsking(!asking); } }}>
+            <IGift size={16} sw={2.2} />Someone’s getting this
+          </button>
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
+
+        {asking && (
+          <form style={{ display: "flex", flexDirection: "column", gap: 8 }} onSubmit={(e) => { e.preventDefault(); onPromise(who); setAsking(false); }}>
+            <label htmlFor="promiseWho" style={{ fontSize: 14, fontWeight: 600 }}>Who’s getting it? <span className="small" style={{ fontWeight: 400 }}>(optional)</span></label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input id="promiseWho" autoFocus maxLength={60} value={who} onChange={(e) => setWho(e.target.value)} placeholder="e.g. Mum"
+                onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setAsking(false))}
+                style={{ flex: "1 1 auto", minWidth: 0, minHeight: 44, border: "1px solid #C9CFC8", borderRadius: 12, padding: "0 14px", fontSize: 15 }} />
+              <button className="btn btn-pine" disabled={!online}>Save</button>
+            </div>
+          </form>
+        )}
+
+        {(it.bought_by || isPromised(it)) && !asking && (
+          <span className="small" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "2px 8px" }}>
+            {it.bought_by && isPromised(it) && <span><strong style={{ color: "var(--pine)" }}>{giftLabel(it)}</strong> · {shortDate(it.bought_at)}</span>}
+            {it.bought_by && !isPromised(it) && <span>Bought by {names[it.bought_by] || "someone"} · {shortDate(it.bought_at)}</span>}
+            {!it.bought_by && isPromised(it) && <span><strong style={{ color: "var(--gift)" }}>{promiseLabel(it)}</strong> · {shortDate(it.promised_at)}{it.promised_marked_by && names[it.promised_marked_by] ? ` · noted by ${names[it.promised_marked_by]}` : ""}</span>}
+            {isPromised(it) && <button type="button" className="linkbtn" style={{ padding: "2px 0", minHeight: 0 }} onClick={() => { setWho(it.promised_by_name || ""); setAsking(true); }} disabled={!online}>{it.promised_by_name ? "Change name" : "Add a name"}</button>}
+          </span>
+        )}
+
+        <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
           {!editing && <button type="button" className="btn btn-ghost" onClick={() => setEditing(true)} disabled={!online}>Edit</button>}
           <button type="button" className="btn btn-ghost" onClick={onDelete} disabled={!online}>Remove item</button>
         </div>
