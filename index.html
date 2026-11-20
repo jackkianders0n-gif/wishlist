@@ -172,12 +172,82 @@
   .err { color: var(--accent); font-size: 14px; font-weight: 600; margin: 0; }
   .empty { padding: 40px; text-align: center; color: var(--muted); background: #fff; border-radius: 18px; border: 1px solid var(--line); }
 
+  .only-phone, .search-toggle, .sheet-scrim, .sheet-handle { display: none; }
+
+  /* ---------- Phone layout ---------- */
   @media (max-width: 640px) {
-    .top-in, main { padding-left: 16px; padding-right: 16px; }
-    .drawer { position: static; max-height: none; }
+    .only-desktop { display: none; }
+    .only-phone { display: inline; }
     .row2 { grid-template-columns: minmax(0, 1fr); }
     .dialog { padding: 22px 18px; }
+
+    /* 1. one slim header row; search opens on demand */
+    .top-in { padding: 8px 12px; gap: 8px; flex-wrap: wrap; }
+    .brand-name { display: none; }
+    .grow { flex: 1 1 0; min-width: 0; }
+    .tabs { padding: 3px; }
+    .tab { padding: 6px 11px; min-height: 38px; font-size: 14px; gap: 6px; }
+    .count { font-size: 11px; padding: 0 6px; }
+    .search { display: none; }
+    .search.open { display: flex; order: 10; flex: 1 1 100%; }
+    .search-toggle { display: grid; width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: #fff; place-items: center; }
+    .search-toggle[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .avatar { width: 44px; height: 44px; }
+
+    main { padding: 16px 16px 48px; gap: 18px; }
+
+    /* 2. compact banner, full-width link box, equal buttons */
+    .hero { padding: 18px; gap: 14px; border-radius: 18px; }
+    .hero h1 { font-size: 22px; }
+    .hero p { font-size: 14px; margin-top: 2px; }
+    .hero form { flex: 1 1 100%; gap: 10px; }
+    .paste { flex: 1 1 100%; min-height: 48px; }
+    .hero form .btn-big { flex: 1 1 0; min-height: 48px; }
+
+    /* 3. categories: one row you swipe */
+    .toolbar { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 12px; }
+    .cat-chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 0 16px 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .cat-chips::-webkit-scrollbar { display: none; }
+    .cat-chips .chip { flex: none; min-height: 38px; padding: 0 14px; }
+
+    /* 4. totals on one line + small refresh button */
+    .checkrow { flex-wrap: nowrap; justify-content: space-between; gap: 10px; }
+    .stats { flex: 1 1 auto; min-width: 0; font-size: 13px; gap: 0; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
+    .stats .stat + .stat::before { content: "·"; margin: 0 6px; color: var(--muted); }
+    .check-btn { flex: none; width: 44px; padding: 0; }
+    .check-btn .btn-label { display: none; }
+
+    /* 5. two cards per row */
+    .sec h2 { font-size: 20px; flex-wrap: wrap; row-gap: 0; }
+    .sec h2 span { font-size: 13px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .card { border-radius: 16px; }
+    .pic { height: 118px; }
+    .pic img { max-width: calc(100% - 16px); max-height: 102px; }
+    .badge { top: 8px; left: 8px; font-size: 11px; padding: 3px 8px; }
+    .badge.bought { right: 8px; }
+    .card-body { padding: 10px 11px 12px; }
+    .card-title { font-size: 14px; }
+    .card-sub { font-size: 12px; }
+    .card-foot { flex-direction: column; align-items: flex-start; gap: 0; padding-top: 6px; }
+    .price { font-size: 17px; }
+    .price.need { font-size: 14px; }
+    .card .small { font-size: 12px; }
+    .note { font-size: 11px; padding: 3px 6px; }
+    .todo { padding: 12px; }
+    .todo-chip { font-size: 13px; padding: 0 12px; min-height: 38px; }
+
+    /* 6. item details slide up as a sheet */
+    .sheet-scrim { display: block; position: fixed; inset: 0; background: rgba(20,28,24,.45); z-index: 39; }
+    .drawer { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-width: none; width: 100%; max-height: 88vh; overflow: auto; z-index: 40; border-radius: 22px 22px 0 0; border: 0; padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); gap: 16px; box-shadow: 0 -8px 32px rgba(20,28,24,.2); animation: sheet-up .22s ease-out; overscroll-behavior: contain; }
+    .sheet-handle { display: block; width: 40px; height: 5px; border-radius: 999px; background: var(--line2); margin: 0 auto 4px; }
+    .drawer h2 { font-size: 22px; }
+    .opt-row { gap: 10px; }
+    .opt-pic { width: 60px; height: 60px; }
+    .opt-pic img { max-width: 54px; max-height: 54px; }
   }
+  @keyframes sheet-up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -482,6 +552,9 @@ function Wishlist({ uid }) {
   const [menu, setMenu] = useState(false);
   const [paste, setPaste] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+  useEffect(() => { if (searchOpen && searchRef.current) searchRef.current.focus(); }, [searchOpen]);
   const toastTimer = useRef(null);
 
   const say = useCallback((msg) => {
@@ -717,7 +790,7 @@ function Wishlist({ uid }) {
     <>
       <header className="top">
         <div className="top-in">
-          <div className="brand"><span className="logo"><IGift size={20} stroke="#fff" /></span>Wishlist</div>
+          <div className="brand"><span className="logo"><IGift size={20} stroke="#fff" /></span><span className="brand-name">Wishlist</span></div>
           <nav className="tabs" aria-label="Lists">
             {LISTS.map((l) => (
               <button key={l.id} type="button" className="tab" aria-pressed={list === l.id}
@@ -727,10 +800,14 @@ function Wishlist({ uid }) {
             ))}
           </nav>
           <div className="grow" />
-          <label className="search">
+          <button type="button" className="search-toggle" aria-label="Search" aria-expanded={searchOpen}
+            onClick={() => { if (searchOpen) { setSearchOpen(false); setQ(""); } else setSearchOpen(true); }}>
+            {searchOpen ? <IX size={18} /> : <ISearch size={18} />}
+          </button>
+          <label className={"search" + (searchOpen ? " open" : "")}>
             <ISearch stroke="#5B6660" />
             <span className="sr">Search your list</span>
-            <input type="search" placeholder="Search your list" value={q} onChange={(e) => setQ(e.target.value)} />
+            <input ref={searchRef} type="search" placeholder="Search your list" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
           <div className="me">
             <button type="button" className="avatar" aria-label="Account menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>{initials(me)}</button>
@@ -750,7 +827,7 @@ function Wishlist({ uid }) {
         <section className="hero" aria-label="Add from a link">
           <div style={{ flex: "1 1 360px" }}>
             <h1>Seen something you like?</h1>
-            <p>Paste the link, scan a QR code, or use the + Wishlist button on the shop’s page (needed for Argos).</p>
+            <p><span className="only-desktop">Paste the link, scan a QR code, or use the + Wishlist button on the shop’s page (needed for Argos).</span><span className="only-phone">Paste a link or scan a QR code.</span></p>
           </div>
           <form onSubmit={(e) => { e.preventDefault(); if (paste.trim()) fetchPreview(paste); }}>
             <label className="paste">
@@ -765,7 +842,7 @@ function Wishlist({ uid }) {
 
         <div className="toolbar">
           {cats.length > 1 ? (
-            <div className="chips" role="group" aria-label="Filter by category">
+            <div className="chips cat-chips" role="group" aria-label="Filter by category">
               {["All", ...cats].map((c) => (
                 <button key={c} type="button" className="chip" aria-pressed={cat === c} onClick={() => setCat(c)}>
                   {c} · {c === "All" ? inList.length : inList.filter((i) => i.category === c).length}
@@ -775,14 +852,15 @@ function Wishlist({ uid }) {
           ) : <div />}
           <div className="checkrow">
             <p className="stats">
-              <span><strong>{inList.length}</strong> items</span>
-              <span><strong>{inList.filter((i) => (optsByItem[i.id] || []).length).length}</strong> with a link</span>
-              <span><strong>{gbp(total)}</strong> priced so far</span>
-              <span><strong>{inList.filter((i) => i.bought_by).length}</strong> bought</span>
+              <span className="stat"><strong>{inList.length}</strong> items</span>
+              <span className="stat"><strong>{inList.filter((i) => (optsByItem[i.id] || []).length).length}</strong> with a link</span>
+              <span className="stat"><strong>{gbp(total)}</strong><span className="only-desktop"> priced so far</span></span>
+              <span className="stat only-desktop"><strong>{inList.filter((i) => i.bought_by).length}</strong> bought</span>
             </p>
-            <span className="small">{lastChecked ? "Prices checked " + dayLabel(lastChecked) : ""}</span>
-            <button type="button" className="btn btn-line" onClick={checkPrices} disabled={!online || !!checking}>
-              {checking ? <><span className="spinner" />Checking {checking.done}/{checking.total}…</> : <><IRefresh size={16} sw={2.2} />Check prices</>}
+            <span className="small only-desktop">{lastChecked ? "Prices checked " + dayLabel(lastChecked) : ""}</span>
+            <button type="button" className="btn btn-line check-btn" onClick={checkPrices} disabled={!online || !!checking}
+              aria-label={checking ? `Checking prices, ${checking.done} of ${checking.total}` : "Check prices" + (lastChecked ? ", last checked " + dayLabel(lastChecked) : "")}>
+              {checking ? <><span className="spinner" /><span className="btn-label">Checking {checking.done}/{checking.total}…</span></> : <><IRefresh size={16} sw={2.2} /><span className="btn-label">Check prices</span></>}
             </button>
           </div>
         </div>
@@ -802,14 +880,15 @@ function Wishlist({ uid }) {
                       {linked.map((it) => <ItemCard key={it.id} it={it} opts={optsByItem[it.id]} top={topOf(it)} selected={sel === it.id} onPick={() => setSel(sel === it.id ? null : it.id)} />)}
                     </div>
                   )}
-                  <TodoBox items={todo} sel={sel} onPick={(id) => setSel(sel === id ? null : id)}
-                    onAdd={(t) => addItem(t, list, c)} online={online} />
+                  {(!needle || todo.length > 0) && <TodoBox items={todo} sel={sel} onPick={(id) => setSel(sel === id ? null : id)}
+                    onAdd={(t) => addItem(t, list, c)} online={online} />}
                 </section>
               );
             })}
             {needle && !inList.some(matches) && <div className="empty">Nothing matches “{q}”.</div>}
           </div>
 
+          {selItem && <div className="sheet-scrim" onClick={() => setSel(null)} aria-hidden="true" />}
           {selItem && (
             <Drawer key={selItem.id} it={selItem} opts={optsByItem[selItem.id] || []} top={topOf(selItem)} names={names}
               online={online} catsFor={catsFor}
@@ -899,7 +978,8 @@ function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onU
     : `${n} options. Star your top pick. Click a product to open the shop.`;
   const listName = LISTS.find((l) => l.id === it.list).name;
   return (
-    <aside className="drawer" aria-label="Item details">
+    <aside className="drawer" aria-label="Item details" onKeyDown={(e) => e.key === "Escape" && onClose()}>
+      <span className="sheet-handle" aria-hidden="true" />
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div>
           <span className="eyebrow">{it.list === "xmas" ? listName : `${listName} · ${it.category}`}</span>
