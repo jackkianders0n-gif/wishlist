@@ -147,7 +147,7 @@ function render() {
   const hero = el("section", { class: "hero" },
     el("span", { class: "logo", html: ICON.gift.replace('stroke="currentColor"', 'stroke="#fff"') }),
     el("h1", {}, heading),
-    el("p", {}, `Hi ${data.for_name}! Tap a product to see it in the shop. When you decide to get something, tap “I’m getting this” so nobody else buys the same thing.`),
+    el("p", {}, `Hi ${data.for_name}! Tap a product to see it in the shop.`),
   );
 
   const kids = [hero];
