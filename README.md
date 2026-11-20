@@ -20,6 +20,7 @@ Run each of these once in the SQL Editor, in order (each is safe to re-run):
 
 - `supabase/migrations/2026-11-20-someones-getting-this.sql`: adds the "Someone's getting this" status.
 - `supabase/migrations/2026-11-20-share-links.sql`: share links for family (`share.html`).
+- `supabase/migrations/2026-11-20-sizes.sql`: a Size on each product link, shown in the app and on share pages.
 
 ## How it fits together
 
@@ -27,7 +28,7 @@ Run each of these once in the SQL Editor, in order (each is safe to re-run):
 |---|---|
 | `wl_members` + `wl_is_member()` | Only the two of you get in. Every `wl_` table has a members-only rule. Other gym tracker accounts see nothing. |
 | `wl_items` | One row per thing you want: Flat or Christmas, category, quantity, top pick, who bought it, and who's getting it for you ("Someone's getting this", name optional). |
-| `wl_options` | One row per product link: picture, price, previous price and when it was last checked. `auto_fetch = false` for shops that block us (Argos). |
+| `wl_options` | One row per product link: picture, price, previous price, size (optional) and when it was last checked. `auto_fetch = false` for shops that block us (Argos). |
 | `link-preview` function | Reads the picture, name and price from a link. Takes `{ url }` or `{ urls: [...] }` (up to 20, used by Check prices). |
 | `bookmarklet.html` | Creates the + Wishlist button. It reads the product page in your own browser, then opens the app at `#add?url=…&title=…&image=…&price=…`. |
 | `share.html` + `wl_shares` | Private link per person (e.g. Mum), made from **Share list**. No sign-in: the page can only call `wl_share_view`, `wl_share_claim` and `wl_share_unclaim` with its secret token (kept after the `#`, so it isn't sent to GitHub). It hides bought items and things someone else is getting. **Turn off** in the app stops a link straight away. |

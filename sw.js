@@ -1,6 +1,6 @@
 // Wishlist service worker — keeps the app opening offline.
 // Bump VERSION when you change index.html so phones/laptops pick up the new copy.
-const VERSION = "wl-v8";
+const VERSION = "wl-v9";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./bookmarklet.html", "./share.html"];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 

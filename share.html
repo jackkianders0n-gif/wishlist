@@ -42,6 +42,7 @@
   .opt-name { font-weight: 600; font-size: 15px; line-height: 1.3; }
   .opt-store { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
   .top { align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .size { align-self: flex-start; font-size: 13px; font-weight: 700; background: #EEF1EC; border-radius: 6px; padding: 2px 8px; margin-top: 2px; }
   .price { flex: none; font-family: var(--display); font-size: 18px; font-weight: 700; }
   .nolink { padding: 12px; border: 1.5px dashed var(--line2); border-radius: 14px; font-size: 14px; color: var(--muted); }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -98,6 +99,9 @@ function el(tag, attrs, ...kids) {
 }
 const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : null);
 const gbp = (n) => "£" + Number(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const sizeLabel = (v) => { const t = String(v || "").trim(); return !t ? "" : /^(size|uk|eu|us|waist|w\d)/i.test(t) ? t : "Size " + t; };
+// Page headings. The Christmas list is Jack's.
+const LIST_TITLES = { xmas: "Jack’s Christmas list" };
 const joinNames = (a) => (a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " & " + a[a.length - 1]);
 
 let toastTimer;
@@ -135,14 +139,14 @@ async function load(quiet) {
 
 function render() {
   const owners = joinNames(data.owners || []);
-  const listName = data.list === "xmas" ? "Christmas list" : "list for the flat";
-  document.title = owners ? `${owners}’s ${listName}` : listName;
+  const heading = LIST_TITLES[data.list] || (owners ? `${owners}’s list for the flat` : "The list for the flat");
+  document.title = heading;
   const items = data.items || [];
   const mineCount = items.filter((i) => i.mine).length;
 
   const hero = el("section", { class: "hero" },
     el("span", { class: "logo", html: ICON.gift.replace('stroke="currentColor"', 'stroke="#fff"') }),
-    el("h1", {}, owners ? `${owners}’s ${listName}` : `The ${listName}`),
+    el("h1", {}, heading),
     el("p", {}, `Hi ${data.for_name}! Tap a product to see it in the shop. When you decide to get something, tap “I’m getting this” so nobody else buys the same thing.`),
   );
 
@@ -174,6 +178,7 @@ function itemCard(it) {
             o.top && opts.length > 1 ? el("span", { class: "top" }, "Their top pick") : null,
             el("span", { class: "opt-name" }, o.title || o.store || "Product"),
             el("span", { class: "opt-store" }, o.store || "", el("span", { html: ICON.ext })),
+            o.size ? el("span", { class: "size" }, sizeLabel(o.size)) : null,
           ),
           o.price != null ? el("span", { class: "price" }, gbp(o.price)) : null,
         ];

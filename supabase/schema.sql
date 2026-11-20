@@ -69,6 +69,7 @@ create table if not exists public.wl_options (
   title            text,
   image            text check (image is null or image ~* '^https?://'),
   price            numeric(10,2),
+  size             text check (size is null or length(size) between 1 and 30),  -- e.g. M, UK 10
   previous_price   numeric(10,2),
   currency         text not null default 'GBP',
   price_checked_at timestamptz,

@@ -162,6 +162,8 @@
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,.2); max-width: calc(100vw - 32px); }
 
+  .size-tag { display: inline-flex; align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--ink); background: var(--chip); border-radius: 6px; padding: 2px 7px; margin-top: 4px; }
+
   /* share links */
   .share-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; }
   .share-row.fresh { border-color: var(--pine); background: #F2F8F4; }
@@ -334,6 +336,17 @@ function cleanUrl(raw) {
   return u.toString();
 }
 
+// Sizes: "M" shows as "Size M"; "Size 10" or "UK 10" stay as typed.
+const sizeLabel = (v) => { const t = String(v || "").trim(); return !t ? "" : /^(size|uk|eu|us|waist|w\d)/i.test(t) ? t : "Size " + t; };
+// Some shop links carry the chosen size (e.g. ?size=M).
+function sizeFromUrl(url) {
+  try {
+    const u = new URL(url);
+    for (const [k, v] of u.searchParams) if (/^(size|sz|selectedsize|chosensize|size_code)$/i.test(k) && v && v.length <= 12) return decodeURIComponent(v).trim();
+  } catch {}
+  return "";
+}
+
 // 24 random bytes, base64url (32 characters) — the secret in a share link.
 function makeToken() {
   const b = crypto.getRandomValues(new Uint8Array(24));
@@ -493,7 +506,7 @@ function ShareDialog({ list, onClose, say }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const listName = LISTS.find((l) => l.id === list).name;
-  const listWords = list === "xmas" ? "Christmas list" : "list for the flat";
+  const listWords = list === "xmas" ? "Jack’s Christmas list" : "our list for the flat";
   const linkFor = (s) => new URL("./share.html", location.href).href + "#t=" + s.token;
   const explain = (e) => (e && /wl_shares|promised_share_id/i.test(e.message) ? "Run the share-links SQL in Supabase first (see README)." : e ? e.message : "");
 
@@ -524,9 +537,9 @@ function ShareDialog({ list, onClose, say }) {
     catch { window.prompt("Copy this link:", linkFor(s)); }
   }
   async function send(s) {
-    const text = `Hi ${s.for_name}! Here’s our ${listWords}. Tap “I’m getting this” on anything you get, so nobody doubles up.`;
+    const text = `Hi ${s.for_name}! Here’s ${listWords}. Tap “I’m getting this” on anything you get, so nobody doubles up.`;
     if (navigator.share) {
-      try { await navigator.share({ title: `Our ${listWords}`, text, url: linkFor(s) }); } catch {}
+      try { await navigator.share({ title: listWords.charAt(0).toUpperCase() + listWords.slice(1), text, url: linkFor(s) }); } catch {}
     } else copy(s);
   }
 
@@ -534,7 +547,7 @@ function ShareDialog({ list, onClose, say }) {
     <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="shareTitle" onKeyDown={(e) => e.key === "Escape" && onClose()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <h2 id="shareTitle">Share the {listName} list</h2>
+          <h2 id="shareTitle">Share {list === "xmas" ? "Jack’s Christmas list" : "the Flat list"}</h2>
           <button type="button" className="iconbtn" aria-label="Close" onClick={onClose}><IX /></button>
         </div>
         <p className="small" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
@@ -730,6 +743,7 @@ function Wishlist({ uid }) {
       setDraft({
         source: "button", url, store: p.get("store") || storeOf(url),
         title: p.get("title") || "", image: p.get("image") || "", price: p.get("price") || "",
+        size: p.get("size") || sizeFromUrl(p.get("url") || ""),
         loading: false, blocked: null, error: "",
       });
     };
@@ -764,7 +778,7 @@ function Wishlist({ uid }) {
     if (!guard()) return;
     let clean;
     try { clean = cleanUrl(url); } catch { say("That doesn’t look like a link."); return; }
-    const base = { source: "paste", url: clean, store: storeOf(clean), title: "", image: "", price: "", targetItemId, loading: true, blocked: null, error: "" };
+    const base = { source: "paste", url: clean, store: storeOf(clean), title: "", image: "", price: "", size: sizeFromUrl(url), targetItemId, loading: true, blocked: null, error: "" };
     setDraft(base);
     const { data, error } = await sb.functions.invoke(PREVIEW_FN, { body: { url: clean } });
     setDraft((d) => {
@@ -799,12 +813,16 @@ function Wishlist({ uid }) {
       if (fail(error)) return;
       itemId = data.id;
     }
-    const { error } = await sb.from("wl_options").insert({
+    const row = {
       item_id: itemId, url: d.url, store: d.store || storeOf(d.url),
       title: (d.title || "").trim() || null, image: /^https?:\/\//i.test(d.image || "") ? d.image : null,
       price, price_checked_at: price != null ? new Date().toISOString() : null,
       auto_fetch: !d.blocked && !isBlockedStore(d.store),
-    });
+    };
+    const size = (d.size || "").trim().slice(0, 30);
+    if (size) row.size = size;
+    const { error } = await sb.from("wl_options").insert(row);
+    if (error && /size/i.test(error.message)) { say("Run the sizes SQL in Supabase first (see README)."); return; }
     if (fail(error)) return;
     setDraft(null); setPaste("");
     const it = items.find((i) => i.id === itemId);
@@ -836,6 +854,7 @@ function Wishlist({ uid }) {
   async function updateOption(id, patch) {
     if (!guard()) return;
     const { error } = await sb.from("wl_options").update(patch).eq("id", id);
+    if (error && "size" in patch && /size/i.test(error.message)) { say("Run the sizes SQL in Supabase first (see README)."); return; }
     if (!fail(error)) load();
   }
   async function deleteOption(o) {
@@ -1065,6 +1084,7 @@ function ItemCard({ it, opts, top, selected, onPick }) {
       <span className="card-body">
         <span className="card-title">{it.title}</span>
         <span className="card-sub">{n > 1 ? `${n} options to compare` : (o.title || o.store)}</span>
+        {(top || n === 1) && o.size && <span className="size-tag">{sizeLabel(o.size)}</span>}
         <span className="card-foot">
           <span className={"price" + (price == null ? " need" : "")}>{priceText}{price != null && it.qty > 1 && <span className="unit"> each</span>}{showWas && <span className="was">{gbp(top.previous_price)}</span>}</span>
           <span className="small">{n > 1 && !top ? "" : o.store}</span>
@@ -1216,7 +1236,7 @@ function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onU
 
 function OptionRow({ o, isTop, canStar, online, onTop, onSave, onDelete }) {
   const [edit, setEdit] = useState(false);
-  const [f, setF] = useState({ title: o.title || "", price: o.price != null ? Number(o.price).toFixed(2) : "", image: o.image || "" });
+  const [f, setF] = useState({ title: o.title || "", price: o.price != null ? Number(o.price).toFixed(2) : "", image: o.image || "", size: o.size || "" });
   const showWas = o.previous_price != null && o.price != null && num(o.previous_price) !== num(o.price);
   const note = o.auto_fetch
     ? (o.price_checked_at ? "Checked " + dayLabel(o.price_checked_at) + " · updates with Check prices" : "Updates with Check prices")
@@ -1231,6 +1251,7 @@ function OptionRow({ o, isTop, canStar, online, onTop, onSave, onDelete }) {
           {isTop && <span className="eyebrow" style={{ color: "var(--accent)", fontWeight: 700 }}>Top pick</span>}
           <a className="opt-name" href={o.url} target="_blank" rel="noopener">{o.title || o.url}</a>
           <span className="opt-store">{o.store}<IExt size={12} /></span>
+          {o.size && <span className="size-tag" style={{ marginTop: 0 }}>{sizeLabel(o.size)}</span>}
         </div>
         <div className="opt-side">
           <span className={"price" + (o.price == null ? " need" : "")} style={{ fontSize: o.price == null ? 14 : 18 }}>{o.price == null ? "Price needed" : gbp(o.price)}</span>
@@ -1244,6 +1265,8 @@ function OptionRow({ o, isTop, canStar, online, onTop, onSave, onDelete }) {
           const price = parsePrice(f.price);
           const patch = { title: f.title.trim() || null, image: /^https?:\/\//i.test(f.image.trim()) ? f.image.trim() : null };
           if (price !== num(o.price)) Object.assign(patch, { price, previous_price: o.price, price_checked_at: new Date().toISOString() });
+          const size = f.size.trim().slice(0, 30) || null;
+          if (size !== (o.size || null)) patch.size = size;
           onSave(patch); setEdit(false);
         }}>
           <label className="field">Name<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
@@ -1251,6 +1274,7 @@ function OptionRow({ o, isTop, canStar, online, onTop, onSave, onDelete }) {
             <label className="field">Price (£)<input inputMode="decimal" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></label>
             <label className="field">Picture link<input type="url" value={f.image} onChange={(e) => setF({ ...f, image: e.target.value })} /></label>
           </div>
+          <label className="field">Size <span style={{ fontWeight: 400 }}>(optional)</span><input value={f.size} maxLength={30} onChange={(e) => setF({ ...f, size: e.target.value })} placeholder="e.g. M or UK 10" /></label>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button type="button" className="btn btn-ghost" onClick={() => setEdit(false)}>Cancel</button>
             <button className="btn btn-pine" disabled={!online}>Save</button>
@@ -1321,6 +1345,7 @@ function AddDialog({ draft, setDraft, items, list, catsFor, onSave, onClose }) {
               <label className="field">Price (£)<input inputMode="decimal" value={draft.price} onChange={set("price")} placeholder="e.g. 24.99" disabled={draft.loading} /></label>
               <label className="field">Shop<input value={draft.store} onChange={set("store")} disabled={draft.loading} /></label>
             </div>
+            <label className="field">Size <span style={{ fontWeight: 400 }}>(optional, e.g. M or UK 10)</span><input value={draft.size || ""} onChange={set("size")} maxLength={30} disabled={draft.loading} /></label>
             {!draft.loading && !draft.image && (
               <label className="field">Picture link (optional)<input type="url" value={draft.image} onChange={set("image")} placeholder="Right-click the shop’s photo › Copy image address" /></label>
             )}
