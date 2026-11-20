@@ -162,6 +162,12 @@
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,.2); max-width: calc(100vw - 32px); }
 
+  /* share links */
+  .share-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; }
+  .share-row.fresh { border-color: var(--pine); background: #F2F8F4; }
+  .share-row .who { flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; }
+  .share-row .who strong { font-size: 16px; }
+
   /* QR scanner */
   .btn-scan { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.75); }
   .scan { position: fixed; inset: 0; z-index: 70; background: #0E1412; color: #fff; }
@@ -222,8 +228,8 @@
     .checkrow { flex-wrap: nowrap; justify-content: space-between; gap: 10px; }
     .stats { flex: 1 1 auto; min-width: 0; font-size: 13px; gap: 0; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
     .stats .stat + .stat::before { content: "·"; margin: 0 6px; color: var(--muted); }
-    .check-btn { flex: none; width: 44px; padding: 0; }
-    .check-btn .btn-label { display: none; }
+    .check-btn, .share-btn { flex: none; width: 44px; padding: 0; }
+    .check-btn .btn-label, .share-btn .btn-label { display: none; }
 
     /* 5. two cards per row */
     .sec h2 { font-size: 20px; flex-wrap: wrap; row-gap: 0; }
@@ -328,6 +334,12 @@ function cleanUrl(raw) {
   return u.toString();
 }
 
+// 24 random bytes, base64url (32 characters) — the secret in a share link.
+function makeToken() {
+  const b = crypto.getRandomValues(new Uint8Array(24));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 // Best guess at which existing item a product belongs to (word overlap).
 function suggestItem(items, title) {
   const t = new Set(words(title));
@@ -359,6 +371,7 @@ const ICheck = (p) => <Svg {...p}><path d="M5 12l5 5L20 7" /></Svg>;
 const IRefresh = (p) => <Svg {...p}><path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 4v5h-5" /></Svg>;
 const IExt = (p) => <Svg {...p}><path d="M14 4h6v6" /><path d="M20 4 10 14" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></Svg>;
 const IClock = (p) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Svg>;
+const IShare = (p) => <Svg {...p}><path d="M12 3v12" /><path d="m7 8 5-5 5 5" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></Svg>;
 const ICamera = (p) => <Svg {...p}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></Svg>;
 const IImage = (p) => <Svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-9 9" /></Svg>;
 const IStar = ({ on, color }) => <Svg size={22} sw={1.8} stroke={on ? color : "#5B6660"} fill={on ? color : "none"}><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" /></Svg>;
@@ -472,6 +485,92 @@ function ScanDialog({ onClose, onLink }) {
   );
 }
 
+// ===================== SHARE LINKS =====================
+function ShareDialog({ list, onClose, say }) {
+  const [shares, setShares] = useState(null);
+  const [name, setName] = useState("");
+  const [fresh, setFresh] = useState(null);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const listName = LISTS.find((l) => l.id === list).name;
+  const listWords = list === "xmas" ? "Christmas list" : "list for the flat";
+  const linkFor = (s) => new URL("./share.html", location.href).href + "#t=" + s.token;
+  const explain = (e) => (e && /wl_shares|promised_share_id/i.test(e.message) ? "Run the share-links SQL in Supabase first (see README)." : e ? e.message : "");
+
+  async function load() {
+    const { data, error } = await sb.from("wl_shares").select("*").eq("list", list).is("revoked_at", null).order("created_at");
+    if (error) { setErr(explain(error)); setShares([]); return; }
+    setShares(data || []);
+  }
+  useEffect(() => { load(); }, [list]);
+
+  async function create(e) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setBusy(true); setErr("");
+    const { data, error } = await sb.from("wl_shares").insert({ token: makeToken(), list, for_name: name.trim().slice(0, 60) }).select().single();
+    setBusy(false);
+    if (error) { setErr(explain(error)); return; }
+    setName(""); setFresh(data.id); await load();
+  }
+  async function turnOff(s) {
+    if (!confirm(`Turn off ${s.for_name}’s link? It stops working straight away. Anything they’ve said they’re getting stays marked.`)) return;
+    const { error } = await sb.from("wl_shares").update({ revoked_at: new Date().toISOString() }).eq("id", s.id);
+    if (error) { setErr(explain(error)); return; }
+    say(`${s.for_name}’s link is off.`); load();
+  }
+  async function copy(s) {
+    try { await navigator.clipboard.writeText(linkFor(s)); say("Link copied."); }
+    catch { window.prompt("Copy this link:", linkFor(s)); }
+  }
+  async function send(s) {
+    const text = `Hi ${s.for_name}! Here’s our ${listWords}. Tap “I’m getting this” on anything you get, so nobody doubles up.`;
+    if (navigator.share) {
+      try { await navigator.share({ title: `Our ${listWords}`, text, url: linkFor(s) }); } catch {}
+    } else copy(s);
+  }
+
+  return (
+    <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="shareTitle" onKeyDown={(e) => e.key === "Escape" && onClose()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <h2 id="shareTitle">Share the {listName} list</h2>
+          <button type="button" className="iconbtn" aria-label="Close" onClick={onClose}><IX /></button>
+        </div>
+        <p className="small" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+          Each person gets their own private link, with no sign-in. They see the list without anything already bought or being got,
+          and can tap “I’m getting this”. Here it shows as “Mum’s getting this”, and the total updates.
+        </p>
+
+        {shares === null ? <span className="status ok"><span className="spinner" />Loading links…</span> : (
+          shares.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {shares.map((s) => (
+                <div key={s.id} className={"share-row" + (fresh === s.id ? " fresh" : "")}>
+                  <span className="who"><strong>{s.for_name}</strong><span className="small">{fresh === s.id ? "Link ready — send it" : "Made " + shortDate(s.created_at)}</span></span>
+                  <button type="button" className="btn btn-pine" onClick={() => send(s)}><IShare size={16} sw={2.2} />Send</button>
+                  <button type="button" className="btn btn-line" onClick={() => copy(s)}>Copy</button>
+                  <button type="button" className="btn btn-ghost" onClick={() => turnOff(s)}>Turn off</button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        <form onSubmit={create} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <label htmlFor="shareFor" style={{ fontSize: 14, fontWeight: 600 }}>Make a link for</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input id="shareFor" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mum"
+              style={{ flex: "1 1 auto", minWidth: 0, minHeight: 44, border: "1px solid #C9CFC8", borderRadius: 12, padding: "0 14px", fontSize: 15 }} />
+            <button className="btn btn-accent" style={{ whiteSpace: "nowrap", flex: "none" }} disabled={busy || !name.trim()}>{busy ? "Making…" : "Make link"}</button>
+          </div>
+        </form>
+        {err && <p className="err" role="alert">{err}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ===================== AUTH SCREENS =====================
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -567,6 +666,7 @@ function Wishlist({ uid }) {
   const [paste, setPaste] = useState("");
   const [scanning, setScanning] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const searchRef = useRef(null);
   useEffect(() => { if (searchOpen && searchRef.current) searchRef.current.focus(); }, [searchOpen]);
   const toastTimer = useRef(null);
@@ -749,13 +849,16 @@ function Wishlist({ uid }) {
   async function setPromise(it, name) {
     if (!guard()) return;
     const clean = (name || "").trim().slice(0, 60);
-    const { error } = await sb.from("wl_items").update({ promised_by_name: clean || null, promised_at: it.promised_at || new Date().toISOString(), promised_marked_by: uid }).eq("id", it.id);
+    const patch = { promised_by_name: clean || null, promised_at: it.promised_at || new Date().toISOString(), promised_marked_by: uid };
+    const { error } = await sb.from("wl_items").update(patch).eq("id", it.id);
     if (error && /promised/i.test(error.message)) { say("Run the “Someone’s getting this” SQL in Supabase first (see README)."); return; }
     if (!fail(error)) load();
   }
   async function clearPromise(it) {
     if (!guard()) return;
-    const { error } = await sb.from("wl_items").update({ promised_by_name: null, promised_at: null, promised_marked_by: null }).eq("id", it.id);
+    const patch = { promised_by_name: null, promised_at: null, promised_marked_by: null };
+    if ("promised_share_id" in it) patch.promised_share_id = null;
+    const { error } = await sb.from("wl_items").update(patch).eq("id", it.id);
     if (!fail(error)) load();
   }
   function setTop(it, o) {
@@ -886,6 +989,9 @@ function Wishlist({ uid }) {
               {promisedCount > 0 && <span className="stat only-desktop"><strong>{promisedCount}</strong> someone’s getting</span>}
             </p>
             <span className="small only-desktop">{lastChecked ? "Prices checked " + dayLabel(lastChecked) : ""}</span>
+            <button type="button" className="btn btn-line share-btn" onClick={() => setSharing(true)} disabled={!online} aria-label={`Share the ${LISTS.find((l) => l.id === list).name} list`}>
+              <IShare size={16} sw={2.2} /><span className="btn-label">Share list</span>
+            </button>
             <button type="button" className="btn btn-line check-btn" onClick={checkPrices} disabled={!online || !!checking}
               aria-label={checking ? `Checking prices, ${checking.done} of ${checking.total}` : "Check prices" + (lastChecked ? ", last checked " + dayLabel(lastChecked) : "")}>
               {checking ? <><span className="spinner" /><span className="btn-label">Checking {checking.done}/{checking.total}…</span></> : <><IRefresh size={16} sw={2.2} /><span className="btn-label">Check prices</span></>}
@@ -931,6 +1037,7 @@ function Wishlist({ uid }) {
 
       {draft && <AddDialog draft={draft} setDraft={setDraft} items={items} list={list} catsFor={catsFor}
         onSave={saveDraft} onClose={() => setDraft(null)} />}
+      {sharing && <ShareDialog list={list} onClose={() => setSharing(false)} say={say} />}
       {scanning && <ScanDialog onClose={() => setScanning(false)} onLink={(url) => { setScanning(false); fetchPreview(url); }} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
@@ -1093,7 +1200,7 @@ function Drawer({ it, opts, top, names, online, catsFor, onClose, onAddLink, onU
           <span className="small" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "2px 8px" }}>
             {it.bought_by && isPromised(it) && <span><strong style={{ color: "var(--pine)" }}>{giftLabel(it)}</strong> · {shortDate(it.bought_at)}</span>}
             {it.bought_by && !isPromised(it) && <span>Bought by {names[it.bought_by] || "someone"} · {shortDate(it.bought_at)}</span>}
-            {!it.bought_by && isPromised(it) && <span><strong style={{ color: "var(--gift)" }}>{promiseLabel(it)}</strong> · {shortDate(it.promised_at)}{it.promised_marked_by && names[it.promised_marked_by] ? ` · noted by ${names[it.promised_marked_by]}` : ""}</span>}
+            {!it.bought_by && isPromised(it) && <span><strong style={{ color: "var(--gift)" }}>{promiseLabel(it)}</strong> · {shortDate(it.promised_at)}{it.promised_share_id ? " · from their link" : it.promised_marked_by && names[it.promised_marked_by] ? ` · noted by ${names[it.promised_marked_by]}` : ""}</span>}
             {isPromised(it) && <button type="button" className="linkbtn" style={{ padding: "2px 0", minHeight: 0 }} onClick={() => { setWho(it.promised_by_name || ""); setAsking(true); }} disabled={!online}>{it.promised_by_name ? "Change name" : "Add a name"}</button>}
           </span>
         )}

@@ -19,6 +19,7 @@ Shared Christmas and flat wishlist for Jack and Jakey. It's a single `index.html
 Run each of these once in the SQL Editor, in order (each is safe to re-run):
 
 - `supabase/migrations/2026-11-20-someones-getting-this.sql`: adds the "Someone's getting this" status.
+- `supabase/migrations/2026-11-20-share-links.sql`: share links for family (`share.html`).
 
 ## How it fits together
 
@@ -29,6 +30,7 @@ Run each of these once in the SQL Editor, in order (each is safe to re-run):
 | `wl_options` | One row per product link: picture, price, previous price and when it was last checked. `auto_fetch = false` for shops that block us (Argos). |
 | `link-preview` function | Reads the picture, name and price from a link. Takes `{ url }` or `{ urls: [...] }` (up to 20, used by Check prices). |
 | `bookmarklet.html` | Creates the + Wishlist button. It reads the product page in your own browser, then opens the app at `#add?url=…&title=…&image=…&price=…`. |
+| `share.html` + `wl_shares` | Private link per person (e.g. Mum), made from **Share list**. No sign-in: the page can only call `wl_share_view`, `wl_share_claim` and `wl_share_unclaim` with its secret token (kept after the `#`, so it isn't sent to GitHub). It hides bought items and things someone else is getting. **Turn off** in the app stops a link straight away. |
 | `sw.js` | Lets the app open offline, read-only. **Bump `VERSION` when you change `index.html`.** |
 
 - **Sign-in:** same email and password as the gym tracker. The session is kept under `wl-auth`, so it doesn't clash with the gym tracker or House Hunt.
